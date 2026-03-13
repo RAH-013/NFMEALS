@@ -1,23 +1,36 @@
-import express from "express"
-import sequelize from "./config/database.js"
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
 
-const app = express()
+import { PORT } from "./config/env.js";
 
-async function start() {
-    try {
-        await sequelize.authenticate()
-        console.log("Database connected")
+import sequelize from "./config/db.js";
+import userRoutes from "./routes/users.js";
 
-        await sequelize.sync()
+const app = express();
 
-        app.listen(process.env.PORT, () => {
-            console.log(`Server running on ${process.env.PORT}`)
-        })
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+app.use(morgan("dev"));
 
-    } catch (err) {
-        console.error("Database connection error:", err)
-        process.exit(1)
-    }
-}
+// Rutas
+app.use("/api/users", userRoutes);
 
-start()
+(async () => {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log("Database synchronized (mySQL)");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("DB sync error:", err);
+    process.exit(1);
+  }
+})();
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: err.message });
+});

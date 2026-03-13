@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit&family=Parkinsans&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+    --font-logo: "Kanit", sans-serif;
+    --font-body: "Parkinsans", sans-serif;
+}
+
+html {
+    background-color: rgb(27, 27, 27);
+}
