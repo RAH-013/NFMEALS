@@ -1,13 +1,15 @@
 import { DataTypes } from "sequelize";
+
 import sequelize from "../config/db.js";
 
 const User = sequelize.define(
   "users",
   {
-    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: () => uuidv4() },
-    fullName: { type: DataTypes.STRING, allowNull: false },
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    lastname: { type: DataTypes.STRING, allowNull: false },
     email: { type: DataTypes.STRING, allowNull: false },
-    passwordHash: { type: DataTypes.STRING, allowNull: false },
+    password: { type: DataTypes.STRING, allowNull: false },
     phoneNumber: DataTypes.STRING,
     address: DataTypes.TEXT,
     role: { type: DataTypes.ENUM("customer", "admin"), defaultValue: "customer" },
@@ -18,7 +20,7 @@ const User = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ["name"],
+        fields: ["email"],
       },
     ],
   },

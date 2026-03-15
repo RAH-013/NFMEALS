@@ -7,6 +7,8 @@ import { PORT } from "./config/env.js";
 import sequelize from "./config/db.js";
 import userRoutes from "./routes/users.js";
 
+import { errorHandler } from "./middleware/auth.js";
+
 const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
@@ -15,6 +17,9 @@ app.use(morgan("dev"));
 
 // Rutas
 app.use("/api/users", userRoutes);
+
+// Middleware
+app.use(errorHandler);
 
 (async () => {
   try {
