@@ -1,5 +1,6 @@
 import { User } from "../model/index.js"
 import { JWT_SECRET } from "../config/env.js";
+import { Op } from "sequelize";
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -12,11 +13,12 @@ export const authService = async (email, password) => {
         attributes: ["id", "password", "role"]
     });
 
-    if (!user) return null;
-
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) return null;
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        const err = new Error("Credenciales inválidas");
+        err.code = "INVALID_CREDENTIALS";
+        err.status = 401;
+        throw err;
+    }
 
     return jwt.sign(
         {
@@ -42,7 +44,7 @@ export const registerService = async ({
     });
 
     if (existingUser) {
-        const err = new Error("Email already registered");
+        const err = new Error("Correo electrónico en uso");
         err.code = "EMAIL_ALREADY_REGISTERED";
         err.status = 409;
         throw err;
@@ -66,7 +68,7 @@ export const getUserDataService = async (userId) => {
     });
 
     if (!user) {
-        const err = new Error("User not found");
+        const err = new Error("Usuario no encontrado");
         err.code = "USER_NOT_FOUND";
         err.status = 404;
         throw err;
@@ -81,7 +83,7 @@ export const deleteUserService = async (userId) => {
     });
 
     if (!deleted) {
-        const err = new Error("User not found");
+        const err = new Error("Usuario no encontrado");
         err.code = "USER_NOT_FOUND";
         err.status = 404;
         throw err;
@@ -96,31 +98,72 @@ export const updateUserService = async ({
     lastname,
     phoneNumber,
     address,
+    email,
     password
 }) => {
-
     const updateData = {};
 
     if (name) updateData.name = name;
     if (lastname) updateData.lastname = lastname;
     if (phoneNumber) updateData.phoneNumber = phoneNumber;
     if (address) updateData.address = address;
-    if (password) updateData.password = await bcrypt.hash(password, SALT_ROUNDS);
+
+    if (email) {
+        const existingEmail = await User.findOne({
+            where: {
+                email,
+                id: { [Op.ne]: userId }
+            },
+            attributes: ["id"]
+        });
+
+        if (existingEmail) {
+            const err = new Error("Correo electrónico en uso");
+            err.code = "EMAIL_ALREADY_REGISTERED";
+            err.status = 409;
+            throw err;
+        }
+
+        updateData.email = email;
+    }
+
+    if (password) {
+        updateData.password = await bcrypt.hash(password, SALT_ROUNDS);
+    }
 
     const [updatedRows] = await User.update(updateData, {
         where: { id: userId }
     });
 
     if (!updatedRows) {
-        const err = new Error("User not found");
+        const err = new Error("Usuario no encontrado");
         err.code = "USER_NOT_FOUND";
         err.status = 404;
         throw err;
     }
 
-    const user = await User.findByPk(userId, {
-        attributes: ["name", "lastname", "phoneNumber", "address"]
+    return true;
+};
+
+export const createRootUserService = async () => {
+
+    const userCount = await User.count();
+
+    if (userCount > 0) {
+        return false;
+    }
+
+    const passwordHash = await bcrypt.hash("root", 10);
+
+    await User.create({
+        name: "Root",
+        lastname: "Admin",
+        phoneNumber: "0000000000",
+        address: "Memory",
+        email: "root@system.local",
+        password: passwordHash,
+        role: "admin"
     });
 
-    return user;
+    return true;
 };

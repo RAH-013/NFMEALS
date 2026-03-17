@@ -1,7 +1,6 @@
 import { JWT_SECRET } from "../config/env.js";
-import { User } from "../model/index.js"
-import { errorResponse, logError } from "../utils/response.js"
-
+import { User } from "../model/index.js";
+import { errorResponse, logError } from "../utils/response.js";
 import jwt from "jsonwebtoken";
 
 export const authenticate = async (req, res, next) => {
@@ -9,76 +8,56 @@ export const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      const error = new Error("Token missing");
+      const error = new Error("Token faltante");
       error.code = "AUTH_TOKEN_MISSING";
       error.status = 401;
       throw error;
     }
 
     const token = authHeader.split(" ")[1];
-
     const decoded = jwt.verify(token, JWT_SECRET);
-
     const user = await User.findByPk(decoded.id);
 
     if (!user) {
-      const error = new Error("Token invalid");
+      const error = new Error("Token inválido");
       error.code = "AUTH_USER_INVALID";
       error.status = 401;
       throw error;
     }
 
     req.user = user;
-
     next();
   } catch (err) {
     logError(req, err);
-    return errorResponse(res, err.message, err.code || "AUTH_ERROR", err.status || 401);
+    return errorResponse(
+      res,
+      err.message || "Error de autenticación",
+      err.code || "AUTH_ERROR",
+      err.status || 401
+    );
   }
 };
 
 export const authorizeAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ error: "No autorizado." });
-
-    const error = new Error("Token invalid");
+    const error = new Error("No autorizado");
     error.code = "AUTH_ADMIN_REQUIRED";
-    error.status = 401;
-    throw error;
+    error.status = 403;
+    return errorResponse(res, error.message, error.code, error.status);
   }
-
   next();
 };
 
 export const errorHandler = (err, req, res, next) => {
+  logError(req, err);
+
   if (err.type === "entity.parse.failed") {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        message: "Invalid JSON format",
-        code: "INVALID_JSON"
-      }
-    });
+    return errorResponse(res, "Formato JSON inválido", "INVALID_JSON", 400);
   }
 
   if (err.code) {
-    return res.status(err.status || 400).json({
-      success: false,
-      data: null,
-      error: {
-        message: err.message,
-        code: err.code
-      }
-    });
+    return errorResponse(res, err.message, err.code, err.status || 400);
   }
 
-  return res.status(500).json({
-    success: false,
-    data: null,
-    error: {
-      message: "Internal server error",
-      code: "INTERNAL_ERROR"
-    }
-  });
+  return errorResponse(res, "Error interno del servidor", "INTERNAL_ERROR", 500);
 };

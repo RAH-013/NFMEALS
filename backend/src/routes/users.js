@@ -3,18 +3,20 @@ import { Router } from "express";
 import { authUser, getUserData, getUserProfile, createUser, updateUser, deleteUser } from "../controller/user.js";
 import { authenticate, authorizeAdmin } from "../middleware/auth.js";
 
+import { loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
+
 const router = Router();
 
-router.post("/login", authUser);
+router.post("/login", loginLimiter, authUser);
 
-router.post("/register", createUser);
+router.post("/register", registerLimiter, createUser);
 
 router.get("/me", authenticate, getUserProfile);
 
-router.put("/update/:id", authenticate, updateUser);
+router.put("/:userId", authenticate, updateUser);
 
-router.delete("/delete/:id", authenticate, deleteUser);
+router.delete("/:userId", authenticate, deleteUser);
 
-router.get("/:id", authenticate, authorizeAdmin, getUserData);
+router.get("/:userId", authenticate, authorizeAdmin, getUserData);
 
 export default router;

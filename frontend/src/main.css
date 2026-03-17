@@ -10,3 +10,8 @@
 html {
     background-color: rgb(27, 27, 27);
 }
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #e31d26 !important;
+}

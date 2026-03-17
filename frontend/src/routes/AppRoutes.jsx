@@ -1,28 +1,50 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy } from "react";
+import { PrivateRoute, RoleGuard } from "./PrivateRoutes";
+import { UserProvider } from "../context/User";
 
 import Main from "../layouts/Main";
 
 const Home = lazy(() => import("../pages/Home"));
 const Cart = lazy(() => import("../pages/Cart"));
+const Profile = lazy(() => import("../pages/Profile"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 const Auth = lazy(() => import("../pages/Auth"));
+const AdminHome = lazy(() => import("../pages/admin/Home"));
 
 export default function AppRouter() {
     return (
         <BrowserRouter>
-            <Routes>
+            <UserProvider>
+                <Routes>
 
-                <Route path="/authenticate" element={<Auth />} />
+                    {/* ruta pública */}
+                    <Route path="/authenticate" element={<Auth />} />
 
-                <Route element={<Main />}>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/carrito" element={<Cart />} />
-                </Route>
+                    {/* layout público */}
+                    <Route element={<Main />}>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/carrito" element={<Cart />} />
+                    </Route>
 
-                <Route path="*" element={<NotFound />} />
+                    {/* rutas privadas */}
+                    <Route element={<PrivateRoute />}>
+                        <Route element={<Main />}>
+                            <Route path="/profile" element={<Profile />} />
+                        </Route>
+                    </Route>
 
-            </Routes>
+                    {/* rutas admin */}
+                    <Route element={<RoleGuard role="admin" />}>
+                        <Route element={<Main />}>
+                            <Route path="/admin" element={<AdminHome />} />
+                        </Route>
+                    </Route>
+
+                    <Route path="*" element={<NotFound />} />
+
+                </Routes>
+            </UserProvider>
         </BrowserRouter>
     );
 }
