@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons"
 
@@ -26,7 +25,7 @@ function ScrollTopButton() {
     return (
         <button
             onClick={scrollToTop}
-            className={`fixed bottom-6 right-6 z-10 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5 pointer-events-none"
+            className={`fixed cursor-pointer bottom-6 right-6 z-10 bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5 pointer-events-none"
                 }`}
         >
             <FontAwesomeIcon icon={faArrowUp} />

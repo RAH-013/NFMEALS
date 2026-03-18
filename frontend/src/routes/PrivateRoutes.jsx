@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 
-import Loader from "../components/Loader";
+import Loader from "../layouts/Loader";
 
 export function PrivateRoute({ children }) {
     const { user, loading } = useUser();

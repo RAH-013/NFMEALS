@@ -1,6 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"
+
 import Login from "../components/Login";
 import Register from "../components/Register";
+import Images from "../layouts/Images";
 
 function Auth() {
     const [mode, setMode] = useState("login");
@@ -10,14 +15,18 @@ function Auth() {
     return (
         <div className="flex items-center justify-center min-h-screen bg-neutral-950 text-white sm:px-2 sm:py-6">
 
+            <Link
+                className="absolute top-4 left-4 flex items-center gap-2 px-2 py-1 text-red-700 cursor-pointer rounded hover:bg-neutral-700"
+                to="/"
+            >
+                <FontAwesomeIcon icon={faArrowLeft} />
+                Regresar
+            </Link>
+
             <div className="w-full h-screen sm:h-auto sm:max-w-md mx-auto bg-neutral-900 sm:rounded-2xl shadow-xl p-6 sm:p-5 flex flex-col gap-5">
 
                 <div className="flex flex-col items-center gap-3">
-                    <img
-                        className="w-20 sm:w-22"
-                        src="/NF.svg"
-                        alt="Logotipo"
-                    />
+                    <Images src="/NF.svg" alt="Logotipo" width="90px" height="90px" />
 
                     <h1 className="text-xl sm:text-xl font-semibold text-center">
                         {isLogin ? "Hola de nuevo" : "Únete ahora"}
@@ -45,11 +54,7 @@ function Auth() {
                         </div>
 
                         <button className="flex items-center justify-center gap-3 bg-white text-black rounded-lg py-3 font-medium hover:bg-neutral-200 transition cursor-pointer">
-                            <img
-                                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                                alt="Google"
-                                className="w-5"
-                            />
+                            <Images src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20px" height="20px" />
                             Continuar con Google
                         </button>
                     </>

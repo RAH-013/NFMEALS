@@ -1,5 +1,3 @@
-import React from 'react'
-
 function Register() {
     return (
         <form className="flex flex-col gap-4">

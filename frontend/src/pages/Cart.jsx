@@ -1,5 +1,3 @@
-import React from "react"
-
 function Carrito() {
     return (
         <div className="min-h-screen px-10 py-8">

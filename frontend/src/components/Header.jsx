@@ -1,117 +1,130 @@
-import { useState, useEffect, useCallback } from "react"
-import { useLocation, Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useLocation, Link, useNavigate } from "react-router-dom"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faBars, faXmark, faCartShopping, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons"
+
+import UserOptions from "./UserOptions"
+import Images from "../layouts/Images"
 
 const navLinks = [
-    { label: "Menu", id: "1" },
-    { label: "Como funciona", id: "2" },
-    { label: "Nosotros", id: "3" },
-    { label: "Comunidad", id: "testimonials", isButton: true }
+    { label: "Menu", link: "/otra-pagina" },
+    { label: "Como funciona", link: "#how-it-works" },
+    { label: "Nosotros", link: "#about-us" },
+    { label: "Comunidad", link: "#testimonials" }
 ]
 
 function Header() {
     const [open, setOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
-    const [hover, setHover] = useState(false)
-    const [activeSection, setActiveSection] = useState(null)
-
+    const [activeElement, setActiveElement] = useState(null)
     const { pathname, hash } = useLocation()
+    const navigate = useNavigate()
     const isHome = pathname === "/"
-    const iconBtn = "p-2 rounded-lg transition duration-200 text-lg"
 
-    const iconClass = (path) =>
-        pathname === path
-            ? `${iconBtn} text-red-400 pointer-events-none`
-            : `${iconBtn} hover:bg-white/10`
-
-    const handleScroll = useCallback(() => {
-        setScrolled(window.scrollY > 10)
-
-        if (!isHome) return
-        let current = null
-        for (const { id } of navLinks) {
-            const el = document.getElementById(id)
-            if (el && window.scrollY + 100 >= el.offsetTop) {
-                current = id
-            }
-        }
-        setActiveSection(current)
+    useEffect(() => {
+        if (!isHome) setActiveElement(null)
     }, [isHome])
 
     useEffect(() => {
-        if (isHome) {
-            handleScroll()
-            window.addEventListener("scroll", handleScroll)
-        } else {
-            setActiveSection(null)
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 10)
+            if (!isHome) return
+            let current = null
+            navLinks.forEach(link => {
+                if (!link.link.startsWith("#")) return
+                const id = link.link.replace("#", "")
+                const el = document.getElementById(id)
+                if (el && window.scrollY + 100 >= el.offsetTop) current = id
+            })
+            setActiveElement(current)
         }
 
-        // Detectar hash al cargar o navegar desde otra página
+        if (isHome) window.addEventListener("scroll", handleScroll)
+        handleScroll()
+
         if (hash) {
             const id = hash.replace("#", "")
-            setActiveSection(id)
+            setActiveElement(id)
             if (isHome) {
-                document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
+                const el = document.getElementById(id)
+                if (el) {
+                    const offset = document.querySelector("header")?.offsetHeight || 0
+                    window.scrollTo({
+                        top: el.getBoundingClientRect().top + window.scrollY - offset,
+                        behavior: "smooth"
+                    })
+                }
             }
         }
 
         return () => window.removeEventListener("scroll", handleScroll)
-    }, [handleScroll, isHome, hash])
+    }, [isHome, hash])
 
-    const headerStyle = scrolled && !hover
-        ? "md:bg-black/40 md:backdrop-blur-md"
-        : "bg-linear-65 from-black to-neutral-500"
-
-    const goToSection = (id) => {
-        if (pathname !== "/") {
-            window.location.href = `/#${id}`
-        } else {
-            document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
-            setActiveSection(id)
-        }
+    const goTo = (link) => {
         setOpen(false)
+        if (!link) return
+
+        if (link.startsWith("/")) {
+            navigate(link)
+        } else if (link.startsWith("#")) {
+            const id = link.replace("#", "")
+            if (!isHome) return navigate("/" + link)
+            const el = document.getElementById(id)
+            if (!el) return
+            const offset = document.querySelector("header")?.offsetHeight || 0
+            window.scrollTo({
+                top: el.getBoundingClientRect().top + window.scrollY - offset,
+                behavior: "smooth"
+            })
+            setActiveElement(id)
+        }
     }
 
-    const renderNavLink = ({ label, id, isButton }) => {
-        const active = activeSection === id
-        const classes = active ? "text-red-400 font-semibold" : "hover:text-red-400 transition cursor-pointer"
+    const headerClass = scrolled
+        ? "md:bg-black/40 md:backdrop-blur-md sticky top-0 z-50 flex justify-between px-4 items-center transition-all duration-300"
+        : "bg-linear-65 from-black to-neutral-500 sticky top-0 z-50 flex justify-between px-4 items-center transition-all duration-300"
 
-        return isButton ? (
-            <button key={id} onClick={() => goToSection(id)} className={classes}>{label}</button>
-        ) : (
-            <a key={id} href={`#${id}`} onClick={() => setOpen(false)} className={classes}>{label}</a>
-        )
+
+    const linkClass = (link) => {
+        if (link.startsWith("/")) return pathname === link ? "text-red-400 font-semibold" : "hover:text-red-400 transition cursor-pointer"
+        return isHome && activeElement === link.replace("#", "") ? "text-red-400 font-semibold" : "hover:text-red-400 transition cursor-pointer"
     }
 
     return (
-        <header
-            className={`sticky top-0 z-50 flex justify-between px-4 items-center transition-all duration-300 ${headerStyle}`}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-        >
+        <header className={headerClass}>
             <div className="flex gap-1 items-center">
                 {isHome ? (
                     <>
-                        <img className="size-20" src="/NF.svg" alt="Logotipo" />
+                        <Images
+                            src="/NF.svg"
+                            alt="Logotipo"
+                            width="80px"
+                            height="80px"
+                            objectFit="contain"
+                        />
                         <span className="text-2xl font-bold text-white">Meals</span>
                     </>
                 ) : (
                     <Link to="/" className="flex items-center gap-1">
-                        <img className="size-20" src="/NF.svg" alt="Logotipo" />
+                        <Images
+                            src="/NF.svg"
+                            alt="Logotipo"
+                            width="80px"
+                            height="80px"
+                            objectFit="contain"
+                        />
                         <span className="text-2xl font-bold text-white">Meals</span>
                     </Link>
                 )}
             </div>
 
             <nav className="hidden md:flex gap-6 text-white items-center">
-                {navLinks.map(renderNavLink)}
-                <Link to="/carrito" className={iconClass("/carrito")}>
-                    <FontAwesomeIcon icon={faCartShopping} />
-                </Link>
-                <Link to="/account" className={iconClass("/account")}>
-                    <FontAwesomeIcon icon={faUser} />
-                </Link>
+                {navLinks.map(({ label, link }) => (
+                    <button key={label} onClick={() => goTo(link)} className={linkClass(link)}>
+                        {label}
+                    </button>
+                ))}
+                <UserOptions />
             </nav>
 
             <button className="md:hidden hover:text-red-400 text-3xl text-white cursor-pointer" onClick={() => setOpen(true)}>
@@ -124,14 +137,13 @@ function Header() {
                 </button>
 
                 <nav className="flex flex-col items-center gap-8 text-2xl">
-                    {navLinks.map(renderNavLink)}
+                    {navLinks.map(({ label, link }) => (
+                        <button key={label} onClick={() => goTo(link)} className={linkClass(link)}>
+                            {label}
+                        </button>
+                    ))}
                     <div className="flex gap-6 text-3xl mt-4">
-                        <Link to="/carrito" onClick={() => setOpen(false)} className={iconClass("/carrito")}>
-                            <FontAwesomeIcon icon={faCartShopping} />
-                        </Link>
-                        <Link to="/account" onClick={() => setOpen(false)} className={iconClass("/account")}>
-                            <FontAwesomeIcon icon={faUser} />
-                        </Link>
+                        <UserOptions />
                     </div>
                 </nav>
             </div>
