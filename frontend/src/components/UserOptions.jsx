@@ -37,7 +37,7 @@ function UserOptions() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [menuOpen]);
 
-    if (loading) return <Loading />;
+    if (loading) return <span>Cargando</span>;
 
     return (
         <div className="flex items-center gap-4 relative" ref={menuRef}>
@@ -52,11 +52,11 @@ function UserOptions() {
                         onClick={() => setMenuOpen(prev => !prev)}
                         className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-slate-400 border-2 border-slate-500 outline-4 outline-transparent hover:outline-slate-100/25 transition flex items-center justify-center text-white font-bold overflow-hidden cursor-pointer"
                     >
-                        {user.avatar ? (
+                        {user.profilePicture ? (
                             <Image
-                                src={user.avatar}
-                                alt={`${user.name} avatar`}
-                                className="w-full h-full object-cover rounded-full"
+                                src={user.profilePicture}
+                                alt={`${user.name} profile`}
+                                isRound={true}
                             />
                         ) : (
                             <span className="text-lg">{initial}</span>
@@ -72,13 +72,13 @@ function UserOptions() {
                         </button>
 
                         <div className="flex flex-col items-center gap-3">
-                            {user.avatar ? (
+                            {user.profilePicture ? (
                                 <Image
-                                    src={user.avatar}
-                                    width="100"
-                                    height="100"
-                                    alt={`${user.name} avatar`}
-                                    className="rounded-full object-cover border-4 border-neutral-700"
+                                    src={user.profilePicture}
+                                    width="80px"
+                                    height="80px"
+                                    alt={`${user.name} profile`}
+                                    isRound={true}
                                 />
                             ) : (
                                 <div className="w-24 h-24 rounded-full bg-gray-500 flex items-center justify-center text-3xl font-bold">

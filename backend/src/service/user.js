@@ -76,7 +76,7 @@ export const getUserDataService = async (userId) => {
         include: {
             model: UserProfile,
             as: "profile",
-            attributes: ["name", "lastname"]
+            attributes: ["name", "lastname", "profilePicture"]
         }
     });
 
@@ -91,7 +91,8 @@ export const getUserDataService = async (userId) => {
         email: user.email,
         role: user.role,
         name: user.profile?.name || null,
-        lastname: user.profile?.lastname || null
+        lastname: user.profile?.lastname || null,
+        profilePicture: user.profile?.profilePicture || null
     };
 };
 

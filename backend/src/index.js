@@ -8,6 +8,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
+import passport from "passport";
 
 import sequelize from "./config/db.js";
 import userRoutes from "./routes/users.js";
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.use(apiLimiter);
+app.use(passport.initialize());
 
 // Rutas
 app.use("/api/users", userRoutes);

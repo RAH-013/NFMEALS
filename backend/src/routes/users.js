@@ -12,8 +12,22 @@ import { challengeLimiter, loginLimiter, registerLimiter } from "../middleware/r
 import { sendEmail } from "../config/mailer.js";
 
 import passport from "passport";
+import "../config/google.js"
 
 const router = Router();
+
+router.get("/auth",
+    passport.authenticate("auth-google", {
+        scope: ["profile", "email"]
+    })
+);
+
+router.get("/auth/callback",
+    passport.authenticate("auth-google", { session: false }),
+    (req, res) => {
+        res.redirect(`https://localhost:5173/authenticate?token=${req.user.token}`);
+    }
+);
 
 router.post("/login", loginLimiter, authUser);
 

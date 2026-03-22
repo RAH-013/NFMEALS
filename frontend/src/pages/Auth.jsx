@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router-dom"
+import { useState, useContext, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
+import { UserContext } from "../context/User"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"
 
@@ -11,9 +13,18 @@ function Auth() {
     const [mode, setMode] = useState("login");
     const isLogin = mode === "login";
 
-    const handleLogin = () => {
-        window.location.href = "/api/users/auth";
-    };
+    const { login } = useContext(UserContext);
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const token = params.get("token");
+        if (token) {
+            login(token);
+            navigate("/")
+        }
+    }, [location.search, login, location.pathname]);
 
     return (
         <div className="flex min-h-screen bg-neutral-950 text-white">
@@ -28,7 +39,7 @@ function Auth() {
 
             <div className="hidden md:flex flex-1 items-center justify-center bg-neutral-900">
                 <div className="flex flex-col items-center gap-4 text-center px-10">
-                    <Images src="/NF.svg" alt="Logotipo" background="bg-black" width="120px" height="120px" />
+                    <Images src="/NF.svg" alt="Logotipo" className="bg-black" width="120px" height="120px" />
                     <h2 className="text-2xl font-semibold">
                         {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
                     </h2>
@@ -44,7 +55,7 @@ function Auth() {
                 <div className="w-full md:h-auto h-full max-w bg-neutral-900 md:rounded-2xl shadow-xl p-6 flex flex-col gap-5">
 
                     <div className="flex flex-col items-center gap-3 md:hidden">
-                        <Images src="/NF.svg" alt="Logotipo" background="bg-black" width="90px" height="90px" />
+                        <Images src="/NF.svg" alt="Logotipo" className="bg-black" width="90px" height="90px" />
                         <h1 className="text-xl font-semibold text-center">
                             {isLogin ? "Hola de nuevo" : "Únete ahora"}
                         </h1>
@@ -70,7 +81,7 @@ function Auth() {
                                 <div className="flex-1 h-px bg-neutral-700"></div>
                             </div>
 
-                            <button onClick={handleLogin} className="flex items-center justify-center gap-3 bg-white text-black rounded-lg py-3 font-medium hover:bg-neutral-200 transition cursor-pointer">
+                            <a href="/api/users/auth" className="flex items-center justify-center gap-3 bg-white text-black rounded-lg py-3 font-medium hover:bg-neutral-200 transition cursor-pointer">
                                 <Images
                                     src="https://www.svgrepo.com/show/475656/google-color.svg"
                                     alt="Google"
@@ -78,7 +89,7 @@ function Auth() {
                                     height="20px"
                                 />
                                 Continuar con Google
-                            </button>
+                            </a>
                         </>
                     )}
                 </div>

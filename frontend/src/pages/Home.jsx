@@ -92,10 +92,10 @@ function Home() {
                             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras venenatis euismod malesuada. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras venenatis euismod malesuada.
                         </p>
                     </div>
-                    <div className="rounded-xl shadow-lg overflow-hidden transform transition duration-700 ease-out hover:scale-105 opacity-100">
+                    <div className="rounded-xl overflow-hidden transform transition duration-700 ease-out hover:scale-105 opacity-100">
                         <Images
                             src="/NF.svg"
-                            alt="Historia de la marca"
+                            alt="Logotipo"
                             objectFit="contain"
                         />
                     </div>
