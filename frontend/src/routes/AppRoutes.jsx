@@ -17,7 +17,6 @@ export default function AppRouter() {
         <BrowserRouter>
             <UserProvider>
                 <Routes>
-
                     {/* ruta pública */}
                     <Route path="/authenticate" element={<Auth />} />
 
@@ -42,7 +41,6 @@ export default function AppRouter() {
                     </Route>
 
                     <Route path="*" element={<NotFound />} />
-
                 </Routes>
             </UserProvider>
         </BrowserRouter>

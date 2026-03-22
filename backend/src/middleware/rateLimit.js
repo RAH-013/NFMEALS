@@ -30,6 +30,21 @@ export const loginLimiter = rateLimit({
     }
 });
 
+export const challengeLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        data: null,
+        error: {
+            message: "Too many challenge attempts",
+            code: "CAPTCHA_RATE_LIMIT"
+        }
+    }
+});
+
 export const registerLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 20,

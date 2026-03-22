@@ -1,17 +1,16 @@
+import { PORT } from "./config/env.js";
+import { errorHandler } from "./middleware/auth.js";
+import { createRootUser } from "./controller/user.js";
+
+import { apiLimiter } from "./middleware/rateLimit.js";
+
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 
-import { PORT } from "./config/env.js";
-
 import sequelize from "./config/db.js";
 import userRoutes from "./routes/users.js";
-
-import { errorHandler } from "./middleware/auth.js";
-import { createRootUser } from "./controller/user.js";
-
-import { apiLimiter } from "./middleware/rateLimit.js";
 
 const app = express();
 
@@ -24,6 +23,7 @@ app.set("trust proxy", 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(morgan("dev"));
+
 app.use(apiLimiter);
 
 // Rutas

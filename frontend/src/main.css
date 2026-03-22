@@ -8,10 +8,15 @@
 }
 
 html {
+    -webkit-user-drag: none !important;
     background-color: rgb(27, 27, 27);
 }
 
 .swiper-button-next,
 .swiper-button-prev {
+    color: #e31d26 !important;
+}
+
+.swal2-timer-progress-bar-container {
     color: #e31d26 !important;
 }

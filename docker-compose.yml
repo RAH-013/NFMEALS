@@ -1,12 +1,12 @@
 services:
-
   mysql:
     image: mysql:8.4
     container_name: nf_mysql
     restart: unless-stopped
-    command: --default-time-zone='-06:00'
     env_file:
       - .env
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

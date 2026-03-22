@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 
-function Images({ src, alt = "Imagen", width = "100%", height = "auto", objectFit = "cover" }) {
+function Images({ src, alt = "Imagen", width = "100%", height = "auto", background = "", objectFit = "cover", isRound = true }) {
     const [loaded, setLoaded] = useState(false);
 
     return (
         <div
-            className="relative rounded-2xl overflow-hidden shadow-xl w-full"
+            className={`relative overflow-hidden shadow-xl w-full ${isRound && "rounded-2xl"}`}
             style={{ width, height }}
         >
             {!loaded && (
@@ -16,7 +16,7 @@ function Images({ src, alt = "Imagen", width = "100%", height = "auto", objectFi
                 alt={alt}
                 loading="lazy"
                 onLoad={() => setLoaded(true)}
-                className={`w-full h-full rounded-2xl transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`w-full h-full ${isRound && "rounded-2xl"} ${background} transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
                 style={{ objectFit }}
             />
         </div>

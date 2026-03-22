@@ -1,12 +1,13 @@
 import apiAxios from "./axios";
 import { jwtDecode } from "jwt-decode";
 
-export const apiAuth = async ({ name, password }) => {
+export const apiAuth = async ({ email, password, captcha }) => {
     try {
-        const response = await apiAxios.post("/users/login", { name, password });
+        const response = await apiAxios.post("/users/login", { email, password, captcha });
         return response.data;
     } catch (error) {
         console.error("Error en autenticación:", error);
+        return error.response.data
     }
 };
 
@@ -19,18 +20,18 @@ export const apiMe = async () => {
     }
 };
 
-export const apiCreate = async ({ name, password, role }) => {
+export const apiCreate = async ({ email, password, captcha }) => {
     try {
-        const response = await apiAxios.post('/users/register', { name, password, role });
+        const response = await apiAxios.post('/users/register', { email, password, captcha });
         return response.data;
     } catch (error) {
         console.error("Error al crear usuario:", error);
     }
 }
 
-export const apiUpdate = async (id, { name, password, role }) => {
+export const apiUpdate = async (id, { name, password }) => {
     try {
-        const response = await apiAxios.put(`/users/${id}`, { name, password, role });
+        const response = await apiAxios.put(`/users/${id}`, { email, password });
         return response.data;
     } catch (error) {
         console.error("Error en actualizar usuario:", error);

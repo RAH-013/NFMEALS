@@ -1,13 +1,24 @@
-import { User } from "../model/index.js"
-import { JWT_SECRET } from "../config/env.js";
+import { User, UserProfile } from "../model/index.js"
+import { ALTCHA_SECRET } from "../config/env.js"
 import { Op } from "sequelize";
+import { verifySolution } from "altcha-lib"
+import { createJWT } from "../utils/jwt.js"
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const SALT_ROUNDS = 10;
 
-export const authService = async (email, password) => {
+export const authService = async (email, password, captcha) => {
+    const isValidCaptcha = await verifySolution(captcha, ALTCHA_SECRET);
+
+    if (!isValidCaptcha) {
+        const err = new Error("Captcha inválido");
+        err.code = "INVALID_CAPTCHA";
+        err.status = 400;
+        throw err;
+    }
+
     const user = await User.findOne({
         where: { email },
         attributes: ["id", "password", "role"]
@@ -20,24 +31,23 @@ export const authService = async (email, password) => {
         throw err;
     }
 
-    return jwt.sign(
-        {
-            id: user.id,
-            role: user.role || "customer"
-        },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-    );
+    return createJWT(user);
 };
 
-export const registerService = async ({
-    name,
-    lastname,
-    phoneNumber,
-    address,
-    email,
-    password
-}) => {
+export const EmailVerificationService = (userId) => {
+
+}
+
+export const registerService = async ({ email, password, captcha }) => {
+    const isValidCaptcha = await verifySolution(captcha, ALTCHA_SECRET);
+
+    if (!isValidCaptcha) {
+        const err = new Error("Captcha inválido");
+        err.code = "INVALID_CAPTCHA";
+        err.status = 400;
+        throw err;
+    }
+
     const existingUser = await User.findOne({
         where: { email },
         attributes: ["id"]
@@ -51,12 +61,10 @@ export const registerService = async ({
     }
 
     const user = await User.create({
-        name,
-        lastname,
-        phoneNumber,
-        address,
         email,
-        password: await bcrypt.hash(password, SALT_ROUNDS)
+        password: await bcrypt.hash(password, SALT_ROUNDS),
+        provider: "local",
+        role: "customer"
     });
 
     return { email: user.email };
@@ -64,7 +72,12 @@ export const registerService = async ({
 
 export const getUserDataService = async (userId) => {
     const user = await User.findByPk(userId, {
-        attributes: ["name", "lastname", "phoneNumber", "address"]
+        attributes: ["email", "role"],
+        include: {
+            model: UserProfile,
+            as: "profile",
+            attributes: ["name", "lastname"]
+        }
     });
 
     if (!user) {
@@ -74,7 +87,39 @@ export const getUserDataService = async (userId) => {
         throw err;
     }
 
-    return user;
+    return {
+        email: user.email,
+        role: user.role,
+        name: user.profile?.name || null,
+        lastname: user.profile?.lastname || null
+    };
+};
+
+export const getUserProfileService = async (userId) => {
+    const profile = await UserProfile.findOne({
+        where: { userId },
+        attributes: [
+            "phoneNumber",
+            "street",
+            "exteriorNumber",
+            "interiorNumber",
+            "neighborhood",
+            "city",
+            "municipality",
+            "state",
+            "postalCode",
+            "country"
+        ]
+    });
+
+    if (!profile) {
+        const err = new Error("Perfil no encontrado");
+        err.code = "PROFILE_NOT_FOUND";
+        err.status = 404;
+        throw err;
+    }
+
+    return profile;
 };
 
 export const deleteUserService = async (userId) => {
@@ -92,78 +137,26 @@ export const deleteUserService = async (userId) => {
     return true;
 };
 
-export const updateUserService = async ({
-    userId,
-    name,
-    lastname,
-    phoneNumber,
-    address,
-    email,
-    password
-}) => {
-    const updateData = {};
-
-    if (name) updateData.name = name;
-    if (lastname) updateData.lastname = lastname;
-    if (phoneNumber) updateData.phoneNumber = phoneNumber;
-    if (address) updateData.address = address;
-
-    if (email) {
-        const existingEmail = await User.findOne({
-            where: {
-                email,
-                id: { [Op.ne]: userId }
-            },
-            attributes: ["id"]
-        });
-
-        if (existingEmail) {
-            const err = new Error("Correo electrónico en uso");
-            err.code = "EMAIL_ALREADY_REGISTERED";
-            err.status = 409;
-            throw err;
-        }
-
-        updateData.email = email;
-    }
-
-    if (password) {
-        updateData.password = await bcrypt.hash(password, SALT_ROUNDS);
-    }
-
-    const [updatedRows] = await User.update(updateData, {
-        where: { id: userId }
-    });
-
-    if (!updatedRows) {
-        const err = new Error("Usuario no encontrado");
-        err.code = "USER_NOT_FOUND";
-        err.status = 404;
-        throw err;
-    }
-
-    return true;
-};
-
 export const createRootUserService = async () => {
-
     const userCount = await User.count();
-
-    if (userCount > 0) {
-        return false;
-    }
+    if (userCount > 0) return false;
 
     const passwordHash = await bcrypt.hash("root", 10);
 
-    await User.create({
-        name: "Root",
-        lastname: "Admin",
-        phoneNumber: "0000000000",
-        address: "Memory",
+    const user = await User.create({
         email: "root@system.local",
         password: passwordHash,
         role: "admin"
     });
 
-    return true;
+    const profile = await UserProfile.create({
+        userId: user.id,
+        name: "Root",
+        lastname: "Admin",
+        phoneNumber: "0000000000",
+    });
+
+    if (user && profile) return true
+
+    else return false;
 };

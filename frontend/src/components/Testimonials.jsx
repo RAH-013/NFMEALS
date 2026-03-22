@@ -32,7 +32,7 @@ function Testimonials() {
         <div className="h-screen bg-neutral-500 text-white font-sans flex items-center justify-center">
             <Swiper
                 modules={[Autoplay, Navigation]}
-                spaceBetween={20}
+                spaceBetween={30}
                 centeredSlides={true}
                 navigation
                 loop
@@ -53,7 +53,7 @@ function Testimonials() {
                 {slides.map((slide, idx) => (
                     <SwiperSlide
                         key={slide.id}
-                        className={`flex flex-col items-center justify-center transition-transform duration-300 ${idx === activeIndex ? 'scale-100' : 'scale-90 opacity-50'}`}
+                        className={`flex flex-col items-center justify-center transition-transform duration-300 ${idx === activeIndex ? 'scale-100' : 'scale-80 opacity-50'}`}
                     >
                         <div
                             ref={idx === activeIndex ? progressRef : null}
@@ -68,6 +68,7 @@ function Testimonials() {
                                 width="100%"
                                 height="100%"
                                 objectFit="cover"
+                                isRound={idx === activeIndex && false}
                             />
                         </div>
                         <div className="text-center px-2 mt-2">{slide.text}</div>
@@ -79,4 +80,3 @@ function Testimonials() {
 }
 
 export default Testimonials;
-

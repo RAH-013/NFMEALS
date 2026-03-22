@@ -10,32 +10,32 @@ const User = sequelize.define(
       primaryKey: true
     },
 
-    name: {
-      type: DataTypes.STRING(100),
-      allowNull: false
-    },
-
-    lastname: {
-      type: DataTypes.STRING(100),
-    },
-
     email: {
       type: DataTypes.STRING(255),
       allowNull: false,
+      unique: true,
       validate: { isEmail: true }
+    },
+
+    isEmailVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     },
 
     password: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      allowNull: true
     },
 
-    phoneNumber: {
-      type: DataTypes.STRING(20)
+    provider: {
+      type: DataTypes.ENUM("local", "google"),
+      allowNull: false,
+      defaultValue: "local"
     },
 
-    address: {
-      type: DataTypes.STRING(255)
+    providerId: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
 
     role: {
@@ -49,7 +49,7 @@ const User = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ["email"]
+        fields: ["provider", "providerId"]
       }
     ]
   }
