@@ -1,49 +1,56 @@
-import { Link, useLocation } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRightFromBracket, faArrowRightLong, faCartShopping, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useContext, useState, useEffect, useRef } from "react";
-import { UserContext } from "../context/User";
+import { Link, useLocation } from "react-router-dom"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import {
+    faArrowRightFromBracket,
+    faArrowRightLong,
+    faCartShopping,
+    faUser,
+    faXmark
+} from "@fortawesome/free-solid-svg-icons"
+import { useContext, useState, useEffect, useRef } from "react"
+import { UserContext } from "../context/User"
+import { SwalCustom } from "../utils/modal"
 
-import Loading from "../layouts/Loader";
-import Image from "../layouts/Images";
-import Menu from "../layouts/Menu";
+import Menu from "../layouts/Menu"
+import ProfileImage from "../components/ProfileImage"
 
 function UserOptions() {
-    const { user, loading, logout } = useContext(UserContext);
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef(null);
-    const { pathname } = useLocation();
-
-    const initial = user?.name ? user.name[0].toUpperCase() : "U";
+    const { user, loading, logout } = useContext(UserContext)
+    const [menuOpen, setMenuOpen] = useState(false)
+    const menuRef = useRef(null)
+    const { pathname } = useLocation()
 
     const linkClass = (path) =>
         `w-full px-5 py-4 rounded-xl font-semibold text-lg flex justify-between items-center 
         bg-neutral-900 border border-neutral-700 transition hover:border-neutral-500 hover:bg-neutral-800 active:scale-95
-        ${pathname.startsWith(path) ? "text-red-400" : "hover:text-red-400"}`;
+        ${pathname.startsWith(path) ? "text-red-400" : "hover:text-red-400"}`
 
     useEffect(() => {
-        if (!menuOpen) return;
+        if (!menuOpen) return
 
-        const isMobile = window.matchMedia("(max-width: 768px)").matches;
-        if (isMobile) return;
+        const isMobile = window.matchMedia("(max-width: 768px)").matches
+        if (isMobile) return
 
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setMenuOpen(false);
+                setMenuOpen(false)
             }
-        };
+        }
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [menuOpen]);
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [menuOpen])
 
-    if (loading) return <span>Cargando</span>;
+    if (loading) return <span>Cargando</span>
 
     return (
         <div className="flex items-center gap-4 relative" ref={menuRef}>
             {user ? (
                 <>
-                    <Link to="/carrito" className="flex items-center gap-1 hover:text-red-400 transition">
+                    <Link
+                        to="/carrito"
+                        className="flex items-center gap-1 hover:text-red-400 transition"
+                    >
                         <FontAwesomeIcon icon={faCartShopping} className="text-xl" />
                     </Link>
 
@@ -52,18 +59,14 @@ function UserOptions() {
                         onClick={() => setMenuOpen(prev => !prev)}
                         className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-slate-400 border-2 border-slate-500 outline-4 outline-transparent hover:outline-slate-100/25 transition flex items-center justify-center text-white font-bold overflow-hidden cursor-pointer"
                     >
-                        {user.profilePicture ? (
-                            <Image
-                                src={user.profilePicture}
-                                alt={`${user.name} profile`}
-                                isRound={true}
-                            />
-                        ) : (
-                            <span className="text-lg">{initial}</span>
-                        )}
+                        <ProfileImage user={user} />
                     </button>
 
-                    <Menu className={"md:bg-neutral-700"} open={menuOpen} onClose={() => setMenuOpen(false)}>
+                    <Menu
+                        className={"md:bg-neutral-700"}
+                        open={menuOpen}
+                        onClose={() => setMenuOpen(false)}
+                    >
                         <button
                             className="absolute top-6 right-6 text-3xl md:hidden hover:text-red-400 transition"
                             onClick={() => setMenuOpen(false)}
@@ -72,19 +75,7 @@ function UserOptions() {
                         </button>
 
                         <div className="flex flex-col items-center gap-3">
-                            {user.profilePicture ? (
-                                <Image
-                                    src={user.profilePicture}
-                                    width="80px"
-                                    height="80px"
-                                    alt={`${user.name} profile`}
-                                    isRound={true}
-                                />
-                            ) : (
-                                <div className="w-24 h-24 rounded-full bg-gray-500 flex items-center justify-center text-3xl font-bold">
-                                    {initial}
-                                </div>
-                            )}
+                            <ProfileImage user={user} big />
 
                             <h3 className="text-xl font-semibold">
                                 ¡Hola{user.name && ", " + user.name}!
@@ -122,8 +113,12 @@ function UserOptions() {
 
                             <button
                                 onClick={() => {
-                                    logout();
-                                    setMenuOpen(false);
+                                    setMenuOpen(false)
+                                    SwalCustom({
+                                        icon: "warning",
+                                        message: "¿Deseas cerrar sesión?",
+                                        onConfirmAction: logout
+                                    })
                                 }}
                                 className="w-full px-5 py-4 rounded-xl font-semibold text-lg flex cursor-pointer justify-between items-center bg-red-700 border border-red-800 transition hover:border-red-600 hover:bg-red-900 active:scale-95"
                             >
@@ -145,7 +140,7 @@ function UserOptions() {
                 </Link>
             )}
         </div>
-    );
+    )
 }
 
-export default UserOptions;
+export default UserOptions

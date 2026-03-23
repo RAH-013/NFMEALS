@@ -2,6 +2,7 @@ import { useContext, useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { apiAuth } from "../api/auth"
 import { UserContext } from "../context/User"
+import { SwalCustom } from "../utils/modal"
 
 import Swal from "sweetalert2"
 import "altcha"
@@ -56,20 +57,14 @@ function Login() {
             return
         }
 
-        await Swal.fire({
-            icon: "success",
-            title: "Autenticación Exitosa",
-            text: "Redirigiendo...",
-            confirmButtonColor: "#ef4444",
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            allowOutsideClick: false,
-            allowEscapeKey: false
-        })
-
         login(data.token)
-        navigate("/")
+
+        SwalCustom({
+            icon: "success",
+            message: "Autenticación exitosa",
+            autoclose: true,
+            callback: () => navigate("/")
+        });
     }
 
     return (

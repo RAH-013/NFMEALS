@@ -11,12 +11,33 @@ export const apiAuth = async ({ email, password, captcha }) => {
     }
 };
 
+export const apiVerifyEmail = async () => {
+    try {
+        const response = await apiAxios.get("/users/verify-email");
+        return response?.data || false;
+    } catch (error) {
+        console.error("Error en la verificación de correo:", error);
+        return error?.response?.data || false;
+    }
+};
+
+export const apiVerifyEmailToken = async (token) => {
+    try {
+        const response = await apiAxios.post(`/users/verify-email`, { token });
+        return response?.data || false;
+    } catch (error) {
+        console.error("Error en la verificación de correo:", error);
+        return error?.response?.data || false;
+    }
+};
+
 export const apiMe = async () => {
     try {
         const response = await apiAxios.get("/users/me");
         return response.data;
     } catch (error) {
         console.error("Error en obtener información personal:", error);
+        return error.response.data
     }
 };
 

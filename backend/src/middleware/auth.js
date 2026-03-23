@@ -1,6 +1,6 @@
 import { User } from "../model/index.js";
 import { errorResponse, logError } from "../utils/response.js";
-import { verifyJWT } from "../utils/jwt.js";
+import { verifyAuthJWT } from "../utils/jwt.js";
 
 export const authenticate = async (req, res, next) => {
   try {
@@ -14,7 +14,7 @@ export const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = verifyJWT(token);
+    const decoded = verifyAuthJWT(token);
     const user = await User.findByPk(decoded.id);
 
     if (!user) {
@@ -60,3 +60,11 @@ export const errorHandler = (err, req, res, next) => {
 
   return errorResponse(res, "Error interno del servidor", "INTERNAL_ERROR", 500);
 };
+
+//Solo evitar generar compras si no esta verificado el correo en cuentas locales.
+/*if (!user.isEmailVerified) {
+      const error = new Error("Correo no verificado");
+      error.code = "EMAIL_NOT_VERIFIED";
+      error.status = 403;
+      throw error;
+    }*/

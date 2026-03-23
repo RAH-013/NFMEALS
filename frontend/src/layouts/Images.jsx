@@ -5,7 +5,7 @@ function Images({ src, alt = "Imagen", width = "100%", height = "auto", classNam
 
     return (
         <div
-            className={`relative overflow-hidden w-full ${isRound && "rounded-full"}`}
+            className={`relative overflow-hidden w-full ${isRound ? "rounded-full" : "rounded-2xl"}`}
             style={{ width, height }}
         >
             {!loaded && (

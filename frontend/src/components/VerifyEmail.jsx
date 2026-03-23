@@ -1,130 +1,142 @@
-import { useEffect, useState } from "react"
-import Swal from "sweetalert2"
-import { apiVerifyCode, apiResendCode } from "../api/auth"
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { SwalCustom } from "../utils/modal";
+
+import { apiVerifyEmail, apiVerifyEmailToken } from "../api/auth";
 
 function VerifyEmail() {
-    const [code, setCode] = useState(["", "", "", "", "", ""])
-    const [loading, setLoading] = useState(false)
-    const [timeLeft, setTimeLeft] = useState(300)
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const search = location?.search || "";
+
+    const [status, setStatus] = useState("idle"); // idle | loading | success | error
+
+    const params = new URLSearchParams(search);
+    const token = params.get("token");
 
     useEffect(() => {
-        if (timeLeft <= 0) return
+        if (!token) return;
 
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => prev - 1)
-        }, 1000)
+        const verify = async () => {
+            try {
+                setStatus("loading");
 
-        return () => clearInterval(timer)
-    }, [timeLeft])
+                // Endpoint real para validar token
+                const res = await apiVerifyEmailToken(token);
 
-    const handleChange = (value, index) => {
-        if (!/^[0-9]?$/.test(value)) return
+                if (!res) throw new Error("Token inválido");
 
-        const newCode = [...code]
-        newCode[index] = value
-        setCode(newCode)
+                setStatus("success");
 
-        if (value && index < 5) {
-            document.getElementById(`code-${index + 1}`).focus()
-        }
-    }
-
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        const fullCode = code.join("")
-
-        if (fullCode.length !== 6) {
-            Swal.fire("Error", "Ingresa el código completo", "error")
-            return
-        }
-
-        try {
-            setLoading(true)
-            const { success } = await apiVerifyCode({ code: fullCode })
-
-            if (success) {
-                Swal.fire("Éxito", "Correo verificado correctamente", "success")
-            } else {
-                Swal.fire("Error", "Código inválido", "error")
+                SwalCustom({
+                    icon: "success",
+                    message: "Correo verificado",
+                    autoclose: true,
+                    callback: () => navigate("/authenticate"),
+                });
+            } catch (err) {
+                console.error(err);
+                setStatus("error");
             }
+        };
 
-        } catch (error) {
-            console.error(error)
-            Swal.fire("Error", "Error en el servidor", "error")
-        } finally {
-            setLoading(false)
-        }
-    }
+        verify();
+    }, [token, navigate]);
 
-    const handleResend = async () => {
+    const handleSendEmail = async () => {
         try {
-            await apiResendCode()
-            setTimeLeft(300)
-            Swal.fire("Enviado", "Nuevo código enviado", "success")
-        } catch (error) {
-            console.error(error)
-            Swal.fire("Error", "No se pudo reenviar el código", "error")
-        }
-    }
+            setStatus("loading");
 
-    const formatTime = (seconds) => {
-        const m = Math.floor(seconds / 60)
-        const s = seconds % 60
-        return `${m}:${s.toString().padStart(2, "0")}`
-    }
+            const res = await apiVerifyEmail();
+
+            if (!res) throw new Error("Error al enviar correo");
+
+            SwalCustom({
+                icon: "success",
+                message: "Correo enviado",
+                autoclose: true,
+            });
+
+
+            setStatus("idle");
+        } catch (err) {
+            console.error(err);
+            SwalCustom({
+                icon: "error",
+                message: "No se pudo enviar el correo",
+                autoclose: true,
+            });
+            setStatus("error");
+        }
+    };
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
-            <form
-                onSubmit={handleSubmit}
-                className="bg-neutral-900 p-8 rounded-2xl shadow-lg flex flex-col gap-6 w-full max-w-sm"
+        <div className="flex flex-col items-center justify-center text-center gap-5">
+
+            {/* Icono dinámico */}
+            <div className={`transition-all duration-300 
+        ${status === "loading" ? "animate-spin" : ""} 
+        ${status === "success" ? "text-green-400" : ""} 
+        ${status === "error" ? "text-red-400" : ""}`}
             >
-                <h2 className="text-white text-xl font-semibold text-center">
-                    Verifica tu correo
-                </h2>
+                {status === "loading" && (
+                    <div className="w-7 h-7 border-2 border-neutral-600 border-t-red-600 rounded-full"></div>
+                )}
+                {status === "success" && <span className="text-2xl">✓</span>}
+                {status === "error" && <span className="text-2xl">✕</span>}
+            </div>
 
-                <p className="text-neutral-400 text-sm text-center">
-                    Ingresa el código de 6 dígitos enviado a tu correo
-                </p>
+            {/* Mensaje dinámico */}
+            <p className="text-sm font-medium tracking-wide">
+                {!token && status === "idle" && "Verifica tu correo"}
+                {!token && status === "loading" && "Enviando correo"}
+                {!token && status === "error" && "No se pudo enviar el correo"}
 
-                <div className="flex justify-between gap-2">
-                    {code.map((digit, i) => (
-                        <input
-                            key={i}
-                            id={`code-${i}`}
-                            type="text"
-                            maxLength="1"
-                            value={digit}
-                            onChange={(e) => handleChange(e.target.value, i)}
-                            className="w-12 h-12 text-center text-white bg-neutral-800 rounded-lg outline-none focus:ring-2 focus:ring-red-500 text-lg"
-                        />
-                    ))}
-                </div>
+                {token && status === "loading" && "Verificando correo"}
+                {token && status === "success" && "Correo verificado"}
+                {token && status === "error" && "Enlace inválido o expirado"}
+            </p>
 
+            {/* Subtexto */}
+            {!token && status === "idle" && (
+                <span className="text-xs text-neutral-500">
+                    Te enviaremos un enlace para verificar tu cuenta
+                </span>
+            )}
+            {!token && status === "loading" && (
+                <span className="text-xs text-neutral-500">
+                    Esto tomará unos segundos
+                </span>
+            )}
+            {token && status === "loading" && (
+                <span className="text-xs text-neutral-500">
+                    Esto tomará solo un momento
+                </span>
+            )}
+
+            {/* Botón enviar correo */}
+            {!token && (
                 <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-red-500 hover:bg-red-900 transition rounded-lg py-3 font-semibold cursor-pointer disabled:opacity-50"
+                    onClick={handleSendEmail}
+                    disabled={status === "loading"}
+                    className="text-sm text-red-500 hover:text-red-400 transition disabled:opacity-50"
                 >
-                    {loading ? "Verificando..." : "Verificar"}
+                    {status === "loading" ? "Enviando..." : "Enviar correo de verificación"}
                 </button>
+            )}
 
-                <div className="text-center text-sm text-neutral-400">
-                    {timeLeft > 0 ? (
-                        <span>Reenviar código en {formatTime(timeLeft)}</span>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleResend}
-                            className="text-red-500 hover:underline"
-                        >
-                            Reenviar código
-                        </button>
-                    )}
-                </div>
-            </form>
+            {/* Error con token */}
+            {token && status === "error" && (
+                <button
+                    onClick={() => navigate("/authenticate")}
+                    className="text-xs text-red-500 hover:text-red-400 transition"
+                >
+                    Volver
+                </button>
+            )}
         </div>
-    )
+    );
 }
 
-export default VerifyEmail
+export default VerifyEmail;

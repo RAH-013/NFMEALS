@@ -11,8 +11,7 @@ export function UserProvider({ children }) {
     const refreshUser = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await apiMe();
-            const { success, data, error } = response;
+            const { success, data, error } = await apiMe();
 
             if (success && data) {
                 setUser(data);

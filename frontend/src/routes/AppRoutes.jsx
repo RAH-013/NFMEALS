@@ -19,6 +19,7 @@ export default function AppRouter() {
                 <Routes>
                     {/* ruta pública */}
                     <Route path="/authenticate" element={<Auth />} />
+                    <Route path="/authenticate/verify-email" element={<Auth />} />
 
                     {/* layout público */}
                     <Route element={<Main />}>

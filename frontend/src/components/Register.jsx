@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
 import { apiCreate } from "../api/auth"
+import { SwalCustom } from "../utils/modal"
 
 import Swal from "sweetalert2"
 import "altcha"
@@ -41,38 +41,31 @@ function Register({ callback }) {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        if (!isFormValid) {
-            Swal.fire(
-                "Error",
-                "Por favor completa todos los campos correctamente y el captcha",
-                "error"
-            )
+        const { success, data, error } = await apiCreate({
+            email,
+            password,
+            captcha
+        })
+
+        if (!success) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: error?.message || "Registro Fallido",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            })
             return
         }
 
-        try {
-            const { success, data, error } = await apiCreate({
-                email,
-                password,
-                captcha
-            })
-
-            if (!success) {
-                Swal.fire("Error", error?.message || "No se pudo registrar el usuario", "error")
-                return
-            }
-
-            await Swal.fire(
-                "¡Registro exitoso!",
-                `Un placer conocerte ${data.email}`,
-                "success"
-            )
-
-            callback("login")
-        } catch (error) {
-            console.error(error)
-            Swal.fire("Error", "Ocurrió un error en el servidor", "error")
-        }
+        SwalCustom({
+            icon: "success",
+            message: "Registro exitoso",
+            autoclose: true,
+            callback: () => callback("login")
+        });
     }
 
     return (

@@ -8,6 +8,9 @@ export function PrivateRoute({ children }) {
 
     if (loading) return <Loader />;
     if (!user) return <Navigate to="/authenticate" replace />;
+    if (!user.isEmailVerified) {
+        return <Navigate to="/authenticate/verify-email" replace />;
+    }
 
     return children ?? <Outlet />;
 }

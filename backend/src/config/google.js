@@ -1,6 +1,6 @@
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "./env.js";
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, PORT, URI } from "./env.js";
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { createJWT } from '../utils/jwt.js';
+import { createAuthJWT } from '../utils/jwt.js';
 import { User, UserProfile } from "../model/index.js";
 
 import passport from 'passport';
@@ -8,7 +8,7 @@ import passport from 'passport';
 passport.use("auth-google", new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: 'http://localhost:3000/api/users/auth/callback'
+    callbackURL: `${URI}:${PORT}/api/users/auth/callback`
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         let user = await User.findOne({ where: { email: profile.emails[0].value } });
@@ -38,7 +38,7 @@ passport.use("auth-google", new GoogleStrategy({
             }
         }
 
-        const token = createJWT(user);
+        const token = createAuthJWT(user);
         done(null, { user, token });
     } catch (err) {
         done(err);

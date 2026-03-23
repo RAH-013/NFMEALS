@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom"
 import { UserContext } from "../context/User"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"
+import { SwalCustom } from "../utils/modal";
 
+import VerifyEmail from "../components/VerifyEmail";
 import Login from "../components/Login";
 import Register from "../components/Register";
 import Images from "../layouts/Images";
@@ -17,12 +19,19 @@ function Auth() {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const isVerifyEmail = location.pathname.includes("verify-email");
+
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const token = params.get("token");
         if (token) {
             login(token);
-            navigate("/")
+            SwalCustom({
+                icon: "success",
+                message: "Autenticación exitosa",
+                autoclose: true,
+                callback: () => navigate("/")
+            });
         }
     }, [location.search, login, location.pathname]);
 
@@ -39,15 +48,23 @@ function Auth() {
 
             <div className="hidden md:flex flex-1 items-center justify-center bg-neutral-900">
                 <div className="flex flex-col items-center gap-4 text-center px-10">
+
                     <Images src="/NF.svg" alt="Logotipo" className="bg-black" width="120px" height="120px" />
-                    <h2 className="text-2xl font-semibold">
-                        {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
-                    </h2>
-                    <p className="text-neutral-400 text-sm max-w-sm">
-                        {isLogin
-                            ? "Accede a tu cuenta y continúa donde lo dejaste."
-                            : "Regístrate y empieza a usar la plataforma en segundos."}
-                    </p>
+
+                    {!isVerifyEmail && (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
+                            </h2>
+
+                            <p className="text-neutral-400 text-sm max-w-sm">
+                                {isLogin
+                                    ? "Accede a tu cuenta y continúa donde lo dejaste."
+                                    : "Regístrate y empieza a usar la plataforma en segundos."}
+                            </p>
+                        </>
+                    )}
+
                 </div>
             </div>
 
@@ -61,19 +78,27 @@ function Auth() {
                         </h1>
                     </div>
 
-                    {isLogin ? <Login /> : <Register callback={setMode} />}
+                    {isVerifyEmail ? (
+                        <VerifyEmail />
+                    ) : isLogin ? (
+                        <Login />
+                    ) : (
+                        <Register callback={setMode} />
+                    )}
 
-                    <p className="text-center text-sm text-neutral-400">
-                        {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
-                        <span
-                            className="text-red-500 cursor-pointer hover:underline"
-                            onClick={() => setMode(isLogin ? "register" : "login")}
-                        >
-                            {isLogin ? "Crear cuenta" : "Iniciar sesión"}
-                        </span>
-                    </p>
+                    {!isVerifyEmail && (
+                        <p className="text-center text-sm text-neutral-400">
+                            {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
+                            <span
+                                className="text-red-500 cursor-pointer hover:underline"
+                                onClick={() => setMode(isLogin ? "register" : "login")}
+                            >
+                                {isLogin ? "Crear cuenta" : "Iniciar sesión"}
+                            </span>
+                        </p>
+                    )}
 
-                    {isLogin && (
+                    {isLogin && !isVerifyEmail && (
                         <>
                             <div className="flex items-center gap-3 text-neutral-500 text-sm">
                                 <div className="flex-1 h-px bg-neutral-700"></div>

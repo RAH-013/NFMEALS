@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from "../config/env.js";
+import { JWT_SECRET, JWT_EMAIL_SECRET } from "../config/env.js";
 
-export function createJWT(user) {
+export function createAuthJWT(user) {
     return jwt.sign(
         {
             id: user.id,
@@ -12,6 +12,20 @@ export function createJWT(user) {
     );
 }
 
-export function verifyJWT(token) {
-    return jwt.verify(token, process.env.JWT_SECRET);
+export function verifyAuthJWT(token) {
+    return jwt.verify(token, JWT_SECRET);
+}
+
+export function createEmailJWT(user) {
+    return jwt.sign(
+        {
+            id: user.id,
+        },
+        JWT_EMAIL_SECRET,
+        { expiresIn: "15m" }
+    );
+}
+
+export function verifyEmailJWT(token) {
+    return jwt.verify(token, JWT_EMAIL_SECRET);
 }

@@ -1,4 +1,4 @@
-import { authService, getUserDataService, registerService, deleteUserService, createRootUserService, getUserProfileService } from "../service/user.js";
+import { authService, getUserDataService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService } from "../service/user.js";
 import { successResponse, validateRequired, validateFieldRequired } from "../utils/response.js";
 import { controller } from "../utils/controller.js";
 
@@ -10,6 +10,22 @@ export const authUser = controller(async (req, res) => {
     const token = await authService(email, password, captcha);
 
     return successResponse(res, { token });
+});
+
+export const verifyEmail = controller(async (req, res) => {
+    const response = await verifyEmailService(req.user);
+
+    return successResponse(res, response);
+});
+
+export const verifyEmailToken = controller(async (req, res) => {
+    validateRequired(req.body, ["token"], true);
+
+    const { token } = req.body;
+
+    const response = await verifyEmailTokenService(token);
+
+    return successResponse(res, response);
 });
 
 export const getUserData = controller(async (req, res) => {

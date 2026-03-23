@@ -1,11 +1,10 @@
 import { User, UserProfile } from "../model/index.js"
-import { ALTCHA_SECRET } from "../config/env.js"
-import { Op } from "sequelize";
+import { ALTCHA_SECRET, FRONT_PORT, FRONT_URI } from "../config/env.js"
 import { verifySolution } from "altcha-lib"
-import { createJWT } from "../utils/jwt.js"
+import { createAuthJWT, createEmailJWT, verifyEmailJWT } from "../utils/jwt.js"
 
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { sendVerifyEmail } from "../utils/email.js";
 
 const SALT_ROUNDS = 10;
 
@@ -31,12 +30,61 @@ export const authService = async (email, password, captcha) => {
         throw err;
     }
 
-    return createJWT(user);
+    return createAuthJWT(user);
 };
 
-export const EmailVerificationService = (userId) => {
+export const verifyEmailService = async (user) => {
+    if (!user) {
+        const err = new Error("Usuario no disponible");
+        err.code = "INVALID_USER";
+        err.status = 401;
+        throw err;
+    }
 
-}
+    const token = createEmailJWT(user);
+
+    const front = new URL(FRONT_URI);
+    front.port = FRONT_PORT;
+    front.pathname = "/authenticate/verify-email/";
+    front.searchParams.set("token", token);
+
+    const link = front.toString();
+
+    const emailSend = await sendVerifyEmail(user, link);
+
+    return emailSend ? true : false;
+};
+
+export const verifyEmailTokenService = async (token) => {
+    if (!token) {
+        const err = new Error("Token no disponible");
+        err.code = "INVALID_TOKEN";
+        err.status = 401;
+        throw err;
+    }
+
+    const { id } = verifyEmailJWT(token) || {};
+
+    if (!id) {
+        const err = new Error("Token inválido o expirado");
+        err.code = "INVALID_TOKEN";
+        err.status = 401;
+        throw err;
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+        const err = new Error("Usuario no encontrado");
+        err.code = "USER_NOT_FOUND";
+        err.status = 404;
+        throw err;
+    }
+
+    user.isEmailVerified = true;
+    await user.save();
+
+    return user;
+};
 
 export const registerService = async ({ email, password, captcha }) => {
     const isValidCaptcha = await verifySolution(captcha, ALTCHA_SECRET);
@@ -72,7 +120,7 @@ export const registerService = async ({ email, password, captcha }) => {
 
 export const getUserDataService = async (userId) => {
     const user = await User.findByPk(userId, {
-        attributes: ["email", "role"],
+        attributes: ["email", "isEmailVerified", "role"],
         include: {
             model: UserProfile,
             as: "profile",
@@ -90,6 +138,7 @@ export const getUserDataService = async (userId) => {
     return {
         email: user.email,
         role: user.role,
+        isEmailVerified: user.isEmailVerified,
         name: user.profile?.name || null,
         lastname: user.profile?.lastname || null,
         profilePicture: user.profile?.profilePicture || null
@@ -147,6 +196,7 @@ export const createRootUserService = async () => {
     const user = await User.create({
         email: "root@system.local",
         password: passwordHash,
+        isEmailVerified: true,
         role: "admin"
     });
 

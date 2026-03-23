@@ -1,15 +1,12 @@
 import { Router } from "express";
 
-import { ALTCHA_SECRET } from "../config/env.js";
+import { ALTCHA_SECRET, FRONT_PORT, FRONT_URI } from "../config/env.js";
 import { createChallenge } from "altcha-lib";
 
-import { authUser, getUserData, createUser, deleteUser } from "../controller/user.js";
+import { authUser, verifyEmail, verifyEmailToken, getUserData, createUser, deleteUser } from "../controller/user.js";
 import { authenticate, authorizeAdmin } from "../middleware/auth.js";
 
 import { challengeLimiter, loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
-
-// Import temporal
-import { sendEmail } from "../config/mailer.js";
 
 import passport from "passport";
 import "../config/google.js"
@@ -25,13 +22,17 @@ router.get("/auth",
 router.get("/auth/callback",
     passport.authenticate("auth-google", { session: false }),
     (req, res) => {
-        res.redirect(`https://localhost:5173/authenticate?token=${req.user.token}`);
+        res.redirect(`${FRONT_URI}:${FRONT_PORT}/authenticate?token=${req.user.token}`);
     }
 );
 
 router.post("/login", loginLimiter, authUser);
 
 router.post("/register", registerLimiter, createUser);
+
+router.get("/verify-email", loginLimiter, authenticate, verifyEmail);
+
+router.post("/verify-email", loginLimiter, verifyEmailToken);
 
 router.get("/challenge", challengeLimiter, async (req, res) => {
     const challenge = await createChallenge({
@@ -51,26 +52,5 @@ router.get("/me", authenticate, getUserData);
 router.delete("/:userId", authenticate, deleteUser);
 
 router.get("/:userId", authenticate, authorizeAdmin, getUserData);
-
-
-router.post("/send-email", async (req, res) => {
-    try {
-        const result = await sendEmail({
-            to: "qluf3g6mu5@bwmyga.com",
-            subject: "Correo Prueba",
-            html: `<h2>Hola Mundo</h2>`
-        })
-
-        res.json({
-            success: true,
-            messageId: result.messageId
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        })
-    }
-})
 
 export default router;
