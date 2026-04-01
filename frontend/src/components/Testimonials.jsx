@@ -68,7 +68,7 @@ function Testimonials() {
                                 width="100%"
                                 height="100%"
                                 objectFit="cover"
-                                isRound={idx === activeIndex && false}
+                                isRound={idx === activeIndex && ""}
                             />
                         </div>
                         <div className="text-center px-2 mt-2">{slide.text}</div>

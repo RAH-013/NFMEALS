@@ -8,7 +8,7 @@ import passport from 'passport';
 passport.use("auth-google", new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: `${URI}:${PORT}/api/users/auth/callback`
+    callbackURL: `${URI}/api/users/auth/callback`
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         let user = await User.findOne({ where: { email: profile.emails[0].value } });

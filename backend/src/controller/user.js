@@ -1,5 +1,5 @@
-import { authService, getUserDataService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService } from "../service/user.js";
-import { successResponse, validateRequired, validateFieldRequired } from "../utils/response.js";
+import { authService, getUserDataService, getUserAvatarService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService } from "../service/user.js";
+import { successResponse, validateRequired, validateFieldRequired, cookieResponse } from "../utils/response.js";
 import { controller } from "../utils/controller.js";
 
 export const authUser = controller(async (req, res) => {
@@ -9,7 +9,17 @@ export const authUser = controller(async (req, res) => {
 
     const token = await authService(email, password, captcha);
 
-    return successResponse(res, { token });
+    return cookieResponse(res, token);
+});
+
+export const googleAuth = controller(async (req, res) => {
+    const token = req.user.token
+
+    return cookieResponse(res, token, true);
+});
+
+export const logoutUser = controller(async (req, res) => {
+    return cookieResponse(res, null, false);
 });
 
 export const verifyEmail = controller(async (req, res) => {
@@ -34,6 +44,12 @@ export const getUserData = controller(async (req, res) => {
     const userData = await getUserDataService(id);
 
     return successResponse(res, userData);
+});
+
+export const getUserAvatar = controller(async (req, res) => {
+    const { id } = req.user;
+
+    await getUserAvatarService(id, res);
 });
 
 export const getUserProfile = controller(async (req, res) => {

@@ -4,16 +4,15 @@ import { verifyAuthJWT } from "../utils/jwt.js";
 
 export const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies?.token
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       const error = new Error("Token faltante");
       error.code = "AUTH_TOKEN_MISSING";
       error.status = 401;
       throw error;
     }
 
-    const token = authHeader.split(" ")[1];
     const decoded = verifyAuthJWT(token);
     const user = await User.findByPk(decoded.id);
 
@@ -25,6 +24,7 @@ export const authenticate = async (req, res, next) => {
     }
 
     req.user = user;
+
     next();
   } catch (err) {
     logError(req, err);

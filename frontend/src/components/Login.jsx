@@ -57,7 +57,7 @@ function Login() {
             return
         }
 
-        login(data.token)
+        login()
 
         SwalCustom({
             icon: "success",

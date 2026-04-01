@@ -2,9 +2,10 @@ import { User, UserProfile } from "../model/index.js"
 import { ALTCHA_SECRET, FRONT_PORT, FRONT_URI } from "../config/env.js"
 import { verifySolution } from "altcha-lib"
 import { createAuthJWT, createEmailJWT, verifyEmailJWT } from "../utils/jwt.js"
-
-import bcrypt from "bcryptjs";
 import { sendVerifyEmail } from "../utils/email.js";
+
+import axios from "axios";
+import bcrypt from "bcryptjs";
 
 const SALT_ROUNDS = 10;
 
@@ -124,7 +125,7 @@ export const getUserDataService = async (userId) => {
         include: {
             model: UserProfile,
             as: "profile",
-            attributes: ["name", "lastname", "profilePicture"]
+            attributes: ["id", "name", "lastname"]
         }
     });
 
@@ -136,13 +137,69 @@ export const getUserDataService = async (userId) => {
     }
 
     return {
+        profileId: user.profile.id,
         email: user.email,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
         name: user.profile?.name || null,
         lastname: user.profile?.lastname || null,
-        profilePicture: user.profile?.profilePicture || null
     };
+};
+
+export const getUserAvatarService = async (userId, res) => {
+    const user = await UserProfile.findOne({
+        where: { userId },
+        attributes: ["id", "name", "lastname", "ProfilePicture"],
+        raw: true
+    });
+
+    if (!user) {
+        const err = new Error("Usuario no encontrado");
+        err.code = "USER_NOT_FOUND";
+        err.status = 404;
+        throw err;
+    }
+
+    if (user.ProfilePicture && user.ProfilePicture.trim() !== '') {
+        const imageResponse = await axios.get(user.ProfilePicture, { responseType: 'stream' });
+        res.setHeader('Content-Type', imageResponse.headers['content-type']);
+        res.setHeader('Content-Length', imageResponse.headers['content-length']);
+        return imageResponse.data.pipe(res);
+    }
+
+    const hash = `${userId}${user.id}${user.lastname || ''}`
+        .split('')
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hue = hash % 360;
+    const color1 = `hsl(${hue}, 70%, 40%)`;
+    const color2 = `hsl(${(hue + 30) % 360}, 60%, 50%)`;
+
+    let initials;
+    if (user.name?.trim()) {
+        initials = ((user.name[0] || '') + (user.lastname?.[0] || '')).toUpperCase();
+    } else if (user.lastname?.trim()) {
+        initials = (user.lastname[0] || '').toUpperCase();
+    } else {
+        initials = "Yo";
+    }
+
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="${color1}" />
+                    <stop offset="100%" stop-color="${color2}" />
+                </linearGradient>
+            </defs>
+            <rect width="100" height="100" fill="url(#grad)" />
+            <text x="50" y="55" text-anchor="middle" dominant-baseline="middle"
+                font-family="Sans-serif" font-size="40" font-weight="bold" fill="#fff">
+                ${initials}
+            </text>
+        </svg>`;
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(svg);
 };
 
 export const getUserProfileService = async (userId) => {

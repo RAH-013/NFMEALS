@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 
-function Images({ src, alt = "Imagen", width = "100%", height = "auto", className = "", objectFit = "cover", isRound = false }) {
+function Images({ src, alt = "Imagen", width = "100%", height = "auto", className = "", objectFit = "cover", isRound = "rounded-2xl" }) {
     const [loaded, setLoaded] = useState(false);
 
     return (
         <div
-            className={`relative overflow-hidden w-full ${isRound ? "rounded-full" : "rounded-2xl"}`}
+            className={`relative overflow-hidden w-full ${isRound}`}
             style={{ width, height }}
         >
             {!loaded && (

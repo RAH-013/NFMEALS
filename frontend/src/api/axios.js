@@ -5,14 +5,6 @@ const apiAxios = axios.create({
     withCredentials: true,
 });
 
-apiAxios.interceptors.request.use((config) => {
-    const token = sessionStorage.getItem("nf_meals");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
-
 apiAxios.interceptors.response.use(
     (response) => response,
     (error) => {

@@ -26,6 +26,33 @@ export const validateRequired = (body, fields, generic = false) => {
     }
 };
 
+export const cookieResponse = (res, token = null, redirect = false, status = 200) => {
+    const cookieOptions = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        ...(token && { maxAge: 3600000 })
+    };
+
+    res.status(status);
+
+    if (token) {
+        res.cookie('token', token, cookieOptions);
+    } else {
+        res.clearCookie('token', cookieOptions);
+    }
+
+    if (redirect) {
+        return res.redirect("/");
+    }
+
+    return res.json({
+        success: true,
+        data: null,
+        error: null
+    });
+};
+
 export const successResponse = (res, data = null, status = 200) => {
     return res.status(status).json({
         success: true,

@@ -9,6 +9,7 @@ import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 import passport from "passport";
+import cookieParser from "cookie-parser"
 
 import sequelize from "./config/db.js";
 import userRoutes from "./routes/users.js";
@@ -24,6 +25,7 @@ app.set("trust proxy", 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(cookieParser())
 
 app.use(apiLimiter);
 app.use(passport.initialize());

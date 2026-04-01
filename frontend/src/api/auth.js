@@ -41,6 +41,16 @@ export const apiMe = async () => {
     }
 };
 
+export const apiLogout = async () => {
+    try {
+        const response = await apiAxios.post("/users/logout");
+        return response.data;
+    } catch (error) {
+        console.error("Error en obtener información personal:", error);
+        return error.response.data
+    }
+};
+
 export const apiCreate = async ({ email, password, captcha }) => {
     try {
         const response = await apiAxios.post('/users/register', { email, password, captcha });

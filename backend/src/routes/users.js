@@ -3,7 +3,7 @@ import { Router } from "express";
 import { ALTCHA_SECRET, FRONT_PORT, FRONT_URI } from "../config/env.js";
 import { createChallenge } from "altcha-lib";
 
-import { authUser, verifyEmail, verifyEmailToken, getUserData, createUser, deleteUser } from "../controller/user.js";
+import { authUser, googleAuth, logoutUser, verifyEmail, verifyEmailToken, getUserData, getUserAvatar, createUser, deleteUser } from "../controller/user.js";
 import { authenticate, authorizeAdmin } from "../middleware/auth.js";
 
 import { challengeLimiter, loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
@@ -21,12 +21,12 @@ router.get("/auth",
 
 router.get("/auth/callback",
     passport.authenticate("auth-google", { session: false }),
-    (req, res) => {
-        res.redirect(`${FRONT_URI}:${FRONT_PORT}/authenticate?token=${req.user.token}`);
-    }
+    googleAuth
 );
 
 router.post("/login", loginLimiter, authUser);
+
+router.post("/logout", authenticate, logoutUser);
 
 router.post("/register", registerLimiter, createUser);
 
@@ -46,6 +46,8 @@ router.get("/challenge", challengeLimiter, async (req, res) => {
 });
 
 router.get("/me", authenticate, getUserData);
+
+router.get("/me/avatar", authenticate, getUserAvatar);
 
 //router.put("/:userId", authenticate, updateUser);
 
