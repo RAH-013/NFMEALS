@@ -2,17 +2,11 @@ import { useState, useEffect } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRightLong, faBars, faXmark } from "@fortawesome/free-solid-svg-icons"
+import { UserContext } from "../context/User"
 
 import UserOptions from "./UserOptions"
 import Images from "../layouts/Images"
 import Menu from "../layouts/Menu"
-
-const navLinks = [
-    { label: "Menu", link: "/otra-pagina" },
-    { label: "Como funciona", link: "#how-it-works" },
-    { label: "Nosotros", link: "#about-us" },
-    { label: "Comunidad", link: "#testimonials" }
-]
 
 function Header() {
     const [open, setOpen] = useState(false)
@@ -20,11 +14,30 @@ function Header() {
     const [activeElement, setActiveElement] = useState(null)
     const { pathname, hash } = useLocation()
     const navigate = useNavigate()
+
     const isHome = pathname === "/"
+    const isAdmin = pathname.startsWith("/admin")
+
+    const navLinks = isAdmin ? [
+        { label: "Usuarios", link: "/admin/users" },
+        { label: "Pedidos", link: "/admin/orders" },
+        { label: "Cupones", link: "/admin/coupons" },
+        { label: "Ingredientes", link: "/admin/ingredients" },
+        { label: "Meals", link: "/admin/meals" }
+    ] : [
+        { label: "Menu", link: "/otra-pagina" },
+        { label: "Como funciona", link: "#how-it-works" },
+        { label: "Certificado", link: "#certificate" },
+        { label: "Comunidad", link: "#testimonials" }
+    ]
 
     useEffect(() => {
         if (!isHome) setActiveElement(null)
     }, [isHome])
+
+    useEffect(() => {
+        if (!isAdmin) setActiveElement(null)
+    }, [isAdmin])
 
     useEffect(() => {
         const handleScroll = () => {
@@ -87,8 +100,8 @@ function Header() {
     }
 
     const headerClass = scrolled
-        ? "bg-black/40 backdrop-blur-md sticky top-0 z-50 flex justify-between px-4 items-center transition-all duration-300"
-        : "bg-linear-65 from-black to-neutral-500 sticky top-0 z-50 flex justify-between px-4 items-center transition-all duration-300"
+        ? "bg-black/40 backdrop-blur-md sticky top-0 z-30 flex justify-between px-4 items-center transition-all duration-300"
+        : "bg-linear-65 from-black to-neutral-500 sticky top-0 z-30 flex justify-between px-4 items-center transition-all duration-300"
 
     const linkClass = (link) => {
         if (link.startsWith("/")) {
@@ -108,12 +121,12 @@ function Header() {
                 {isHome ? (
                     <>
                         <Images src="/NF.svg" alt="Logotipo" width="80px" height="80px" objectFit="contain" />
-                        <span className="text-2xl font-bold text-white">Meals</span>
+                        <span className="hidden md:flex text-2xl font-bold text-white">Meals</span>
                     </>
                 ) : (
                     <Link to="/" className="flex items-center gap-1">
                         <Images src="/NF.svg" alt="Logotipo" width="80px" height="80px" objectFit="contain" />
-                        <span className="text-2xl font-bold text-white">Meals</span>
+                        <span className="hidden md:flex text-2xl font-bold text-white">{isAdmin ? "Admin" : "Meals"}</span>
                     </Link>
                 )}
             </div>

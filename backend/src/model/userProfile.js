@@ -22,12 +22,10 @@ const UserProfile = sequelize.define(
 
         profilePicture: {
             type: DataTypes.STRING,
-            allowNull: true
         },
 
         name: {
             type: DataTypes.STRING(100),
-            allowNull: false
         },
 
         lastname: {
@@ -64,7 +62,8 @@ const UserProfile = sequelize.define(
         },
 
         state: {
-            type: DataTypes.STRING(100)
+            type: DataTypes.STRING(100),
+            defaultValue: "Colima"
         },
 
         postalCode: {

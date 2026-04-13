@@ -1,4 +1,5 @@
-import { User, UserProfile } from "../model/index.js"
+import { Op } from "sequelize"
+import { sequelize, User, UserProfile } from "../model/index.js"
 import { ALTCHA_SECRET, FRONT_PORT, FRONT_URI } from "../config/env.js"
 import { verifySolution } from "altcha-lib"
 import { createAuthJWT, createEmailJWT, verifyEmailJWT } from "../utils/jwt.js"
@@ -45,7 +46,6 @@ export const verifyEmailService = async (user) => {
     const token = createEmailJWT(user);
 
     const front = new URL(FRONT_URI);
-    front.port = FRONT_PORT;
     front.pathname = "/authenticate/verify-email/";
     front.searchParams.set("token", token);
 
@@ -109,14 +109,28 @@ export const registerService = async ({ email, password, captcha }) => {
         throw err;
     }
 
-    const user = await User.create({
-        email,
-        password: await bcrypt.hash(password, SALT_ROUNDS),
-        provider: "local",
-        role: "customer"
-    });
+    const t = await sequelize.transaction();
 
-    return { email: user.email };
+    try {
+        const user = await User.create({
+            email,
+            password: await bcrypt.hash(password, SALT_ROUNDS),
+            provider: "local",
+            role: "customer"
+        }, { transaction: t });
+
+        await UserProfile.create({
+            userId: user.id,
+        }, { transaction: t });
+
+        await t.commit();
+
+        return { email: user.email };
+
+    } catch (error) {
+        await t.rollback();
+        throw error;
+    }
 };
 
 export const getUserDataService = async (userId) => {
@@ -229,19 +243,152 @@ export const getUserProfileService = async (userId) => {
     return profile;
 };
 
-export const deleteUserService = async (userId) => {
-    const deleted = await User.destroy({
-        where: { id: userId }
+export const getUsersService = async (options = {}) => {
+    const page = parseInt(options.page, 10) || 1;
+    const limit = parseInt(options.limit, 10) || 10;
+    const search = options.search || "";
+
+    const { page: _p, limit: _l, search: _s, ...filters } = options;
+
+    const offset = (page - 1) * limit;
+
+    const whereClause = {};
+
+    if (search) {
+        whereClause[Op.or] = [
+            { name: { [Op.like]: `%${search}%` } },
+            { email: { [Op.like]: `%${search}%` } }
+        ];
+    }
+
+    for (const [key, value] of Object.entries(filters)) {
+        if (value !== undefined && value !== null && value !== "") {
+            whereClause[key] = value;
+        }
+    }
+
+    const { count, rows } = await User.findAndCountAll({
+        attributes: ["id", "email", "isEmailVerified", "role", "createdAt"],
+        where: whereClause,
+        limit,
+        offset,
+        include: [
+            {
+                model: UserProfile,
+                as: "profile",
+                attributes: ["name", "lastname", "phoneNumber"]
+            }
+        ],
+        order: [['createdAt', 'DESC']]
     });
 
-    if (!deleted) {
+    if (rows.length === 0 && page > 1) {
+        const err = new Error("Página no encontrada");
+        err.code = "PAGE_NOT_FOUND";
+        err.status = 404;
+        throw err;
+    }
+
+    return {
+        info: {
+            totalItems: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            itemsPerPage: limit
+        },
+        users: rows
+    };
+};
+
+export const updateUserService = async (userId, newData) => {
+    const { prevPassword, newPassword, ...profileData } = newData;
+
+    const [user, profile] = await Promise.all([
+        User.findByPk(userId),
+        UserProfile.findOne({ where: { userId } })
+    ]);
+
+    if (!user) {
         const err = new Error("Usuario no encontrado");
         err.code = "USER_NOT_FOUND";
         err.status = 404;
         throw err;
     }
 
-    return true;
+    if (!profile) {
+        const err = new Error("Perfil de usuario no encontrado");
+        err.code = "PROFILE_NOT_FOUND";
+        err.status = 404;
+        throw err;
+    }
+
+    if (newPassword) {
+        if (!prevPassword) {
+            const err = new Error("Se requiere la contraseña actual para realizar el cambio.");
+            err.code = "MISSING_PREV_PASSWORD";
+            err.status = 400;
+            throw err;
+        }
+
+        const isMatch = await bcrypt.compare(prevPassword, user.password);
+
+        if (!isMatch) {
+            const err = new Error("La contraseña actual es incorrecta.");
+            err.code = "INVALID_PASSWORD";
+            err.status = 400;
+            throw err;
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+    }
+
+    const fieldsToUpdate = Object.fromEntries(
+        Object.entries(profileData).filter(([_, value]) => value !== undefined && value !== "")
+    );
+
+    if (Object.keys(fieldsToUpdate).length > 0) {
+        await profile.update(fieldsToUpdate);
+    }
+
+    return {
+        id: user.id,
+    };
+};
+
+export const deleteUserService = async (userId) => {
+    const t = await sequelize.transaction();
+
+    try {
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            const err = new Error("Usuario no encontrado");
+            err.code = "USER_NOT_FOUND";
+            err.status = 404;
+            throw err;
+        }
+
+        await UserProfile.destroy({
+            where: { userId: userId },
+            transaction: t
+        });
+
+        await User.destroy({
+            where: { id: userId },
+            transaction: t
+        });
+
+        await t.commit();
+
+        return true;
+    } catch (err) {
+        await t.rollback();
+
+        if (!err.status) err.status = 500;
+        throw err;
+    }
 };
 
 export const createRootUserService = async () => {

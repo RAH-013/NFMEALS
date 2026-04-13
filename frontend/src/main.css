@@ -7,8 +7,16 @@
     --font-body: "Parkinsans", sans-serif;
 }
 
+@layer base {
+    input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0px 1000px #171717 inset !important;
+        -webkit-text-fill-color: white !important;
+    }
+}
+
 html {
-    -webkit-user-drag: none !important;
+    -webkit-user-drag: none;
+    user-drag: none;
     background-color: rgb(27, 27, 27);
 }
 
@@ -48,4 +56,18 @@ html {
 
 .swal2-timer-progress-bar {
     background-color: #c51821 !important;
+}
+
+.swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #666;
+    opacity: 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.swiper-pagination-bullet-active {
+    background: #e31d26;
 }

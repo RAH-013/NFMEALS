@@ -4,7 +4,9 @@ import { apiAuth } from "../api/auth"
 import { UserContext } from "../context/User"
 import { SwalCustom } from "../utils/modal"
 
+import InputField from "../layouts/InputField"
 import Swal from "sweetalert2"
+
 import "altcha"
 import "altcha/i18n/es-419"
 
@@ -69,22 +71,22 @@ function Login() {
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <input
+            <InputField
                 name="email"
+                autoComplete={true}
                 type="email"
-                placeholder="Correo electrónico"
+                label="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-neutral-800 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
             />
 
-            <input
+            <InputField
                 name="password"
+                autoComplete={true}
                 type="password"
-                placeholder="Contraseña"
+                label="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-neutral-800 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
             />
 
             <div className="flex justify-center">

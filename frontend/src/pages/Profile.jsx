@@ -1,254 +1,180 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useState, useMemo, useCallback } from "react"
+import { useSearchParams } from "react-router-dom"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faArrowRightLong, faXmark, faCircleDot } from "@fortawesome/free-solid-svg-icons"
+
 import { UserContext } from "../context/User"
-import { SwalCustom } from "../utils/modal"
-import ProfileImage from "../components/ProfileImage"
+import { apiMeProfile } from "../api/auth"
+
+import Menu from "../layouts/Menu"
+import ProfileSections from "../components/ProfileSections"
+
+const SECTIONS = [
+    { id: "account", label: "Cuenta", color: "bg-blue-500", textHover: "hover:text-red-400", fields: ["email"] },
+    { id: "profile", label: "Perfil", color: "bg-green-500", textHover: "hover:text-green-400", fields: ["name", "lastname", "phoneNumber"] },
+    { id: "address", label: "Dirección", color: "bg-amber-500", textHover: "hover:text-amber-400", fields: ["street", "exteriorNumber", "interiorNumber", "neighborhood", "postalCode", "municipality", "city", "state", "country"] },
+];
 
 function Profile() {
     const { user } = useContext(UserContext)
+    const [searchParams, setSearchParams] = useSearchParams()
 
-    const [account, setAccount] = useState(null)
-    const [address, setAddress] = useState(null)
-
-    const [form, setForm] = useState({})
+    const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(true)
 
-    const [activeSection, setActiveSection] = useState("account")
+    const [form, setForm] = useState({})
+    const [initialData, setInitialData] = useState({})
+    const [passwords, setPasswords] = useState({ prevPassword: "", password: "", confirmPassword: "" })
 
-    const [editing, setEditing] = useState({
-        account: false,
-        address: false
-    })
+    const activeSection = useMemo(() => {
+        const tab = searchParams.get("tab")
+        const validSections = SECTIONS.map(s => s.id)
+        return [...validSections, "danger"].includes(tab) ? tab : "account"
+    }, [searchParams])
+
+    const sectionsWithChanges = useMemo(() => {
+        const changed = new Set();
+        Object.keys(form).forEach(key => {
+            if (form[key] !== initialData[key]) {
+                const section = SECTIONS.find(s => s.fields?.includes(key));
+                if (section) changed.add(section.id);
+            }
+        });
+        if (passwords.password || passwords.prevPassword) changed.add("account");
+        return Array.from(changed);
+    }, [form, initialData, passwords]);
 
     useEffect(() => {
+        if (!user) return
+
         const fetchData = async () => {
             try {
-                const accountData = {
-                    email: user.email,
-                    role: user.role,
-                    name: user.name,
-                    lastname: user.lastname,
-                    profilePicture: user.profilePicture
-                }
+                const response = await apiMeProfile()
+                const data = response.data
 
-                const addressData = {
-                    phoneNumber: "+52 33 1234 5678",
-                    street: "Av. Siempre Viva",
-                    exteriorNumber: "742",
-                    interiorNumber: "",
-                    neighborhood: "Centro",
-                    city: "Guadalajara",
-                    municipality: "Guadalajara",
-                    state: "Jalisco",
-                    postalCode: "44100",
-                    country: "México"
-                }
+                const merged = { ...data, ...user }
 
-                setAccount(accountData)
-                setAddress(addressData)
-                setForm({ ...accountData, ...addressData })
-
+                setForm(merged)
+                setInitialData(merged)
+            } catch (error) {
+                console.error(error)
             } finally {
                 setLoading(false)
             }
         }
 
-        if (user) fetchData()
-    }, [user])
+        fetchData()
+    }, [user?.id])
 
-    const handleChange = ({ target: { name, value } }) => {
-        setForm(prev => ({ ...prev, [name]: value }))
+    const handleSectionChange = (sectionId) => {
+        setOpen(false)
+        setSearchParams({ tab: sectionId })
     }
 
-    const handleApply = async () => {
-        try {
-            setAccount(prev => ({
-                ...prev,
-                name: form.name,
-                lastname: form.lastname
-            }))
-
-            setAddress(prev => ({
-                ...prev,
-                ...form
-            }))
-
-            SwalCustom({
-                icon: "success",
-                message: "Cambios guardados",
-                autoclose: true
-            })
-
-        } catch (err) {
-            console.error(err)
-        }
-    }
-
-    const handleDelete = () => {
-        SwalCustom({
-            icon: "warning",
-            message: "¿Eliminar tu cuenta permanentemente?",
-            onConfirmAction: async () => {
-                try {
-                    SwalCustom({
-                        icon: "success",
-                        message: "Cuenta eliminada",
-                        autoclose: true
-                    })
-                } catch (err) {
-                    console.error(err)
-                }
-            }
-        })
-    }
-
-    if (!user) return <div className="p-10 text-gray-400">No hay usuario</div>
-    if (loading) return <div className="p-10 text-gray-400">Cargando...</div>
+    if (!user) return <div className="p-10 text-gray-400 flex justify-center items-center h-screen text-xl">Inicia sesión para ver tu perfil</div>
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white flex flex-col md:flex-row">
+        <div className="bg-neutral-950 text-white flex md:flex-row h-[calc(100vh-5rem)] overflow-hidden">
 
-            {/* Sidebar */}
-            <aside className="md:w-64 border-b md:border-r border-neutral-800 p-4 md:p-6">
-                <div className="flex md:flex-col items-center gap-4">
-                    <ProfileImage user={user} big />
-                    <div>
-                        <p className="font-semibold">{user.name}</p>
-                        <p className="text-sm text-gray-400">{user.email}</p>
-                    </div>
-                </div>
-
-                <nav className="mt-6 flex md:flex-col gap-2 text-sm overflow-x-auto">
-                    <button
-                        onClick={() => setActiveSection("account")}
-                        className={`px-3 py-2 rounded-lg ${activeSection === "account" ? "bg-neutral-800" : ""}`}
-                    >
-                        Cuenta
-                    </button>
-
-                    <button
-                        onClick={() => setActiveSection("address")}
-                        className={`px-3 py-2 rounded-lg ${activeSection === "address" ? "bg-neutral-800" : ""}`}
-                    >
-                        Dirección
-                    </button>
-
-                    <button
-                        onClick={() => setActiveSection("danger")}
-                        className={`px-3 py-2 rounded-lg ${activeSection === "danger" ? "bg-red-900 text-white" : "text-red-400"}`}
-                    >
-                        Zona peligrosa
-                    </button>
+            <aside className="hidden md:flex md:w-64 border-r border-neutral-800 p-4 md:p-6 flex-col shrink-0">
+                <nav className="mt-6 flex md:flex-col gap-2 text-sm">
+                    {SECTIONS.map((section) => (
+                        <button
+                            key={section.id}
+                            onClick={() => handleSectionChange(section.id)}
+                            className={`cursor-pointer flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${activeSection === section.id
+                                ? "bg-white/10 text-white font-medium shadow-sm"
+                                : "text-neutral-400 hover:bg-white/5 hover:text-white"
+                                }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className={`w-2 h-2 rounded-full ${section.color} ${sectionsWithChanges.includes(section.id) ? "animate-pulse ring-2 ring-white/20" : ""}`}></span>
+                                {section.label}
+                            </div>
+                            {sectionsWithChanges.includes(section.id) && (
+                                <FontAwesomeIcon icon={faCircleDot} className="text-[10px] text-orange-500" />
+                            )}
+                        </button>
+                    ))}
                 </nav>
+
+                <div className="mt-auto border-t border-neutral-800 pt-4">
+                    <button
+                        onClick={() => handleSectionChange("danger")}
+                        className={`cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl w-full transition ${activeSection === "danger"
+                            ? "bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm"
+                            : "text-red-500 hover:bg-red-500/10"
+                            }`}
+                    >
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        Eliminar cuenta
+                    </button>
+                </div>
             </aside>
 
-            {/* Content */}
-            <main className="flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full flex flex-col gap-10">
+            <ProfileSections
+                loading={loading}
+                form={form}
+                setForm={setForm}
+                initialData={initialData}
+                setInitialData={setInitialData}
+                passwords={passwords}
+                setPasswords={setPasswords}
+                activeSection={activeSection}
+                sectionsWithChanges={sectionsWithChanges}
+                setOpen={setOpen}
+                searchParams={searchParams}
+            />
 
-                {/* Header */}
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Configuración</h1>
+            <Menu open={open} onClose={() => setOpen(false)}>
+                <button className="absolute top-6 right-6 text-3xl text-neutral-400 hover:text-white transition" onClick={() => setOpen(false)}>
+                    <FontAwesomeIcon icon={faXmark} />
+                </button>
 
-                    <button
-                        onClick={handleApply}
-                        className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700"
-                    >
-                        Aplicar cambios
-                    </button>
-                </div>
-
-                {/* Cuenta */}
-                {activeSection === "account" && (
-                    <section className="border-b border-neutral-800 pb-8 flex flex-col gap-5">
-                        <div className="flex justify-between">
-                            <h2 className="text-lg font-semibold">Cuenta</h2>
+                <div className="flex flex-col items-center justify-center h-full text-white w-full px-6">
+                    <nav className="flex flex-col gap-4 w-full max-w-sm">
+                        {SECTIONS.map((section) => (
                             <button
-                                onClick={() => setEditing(e => ({ ...e, account: !e.account }))}
-                                className="text-sm text-gray-400"
+                                key={section.id}
+                                onClick={() => handleSectionChange(section.id)}
+                                className={`w-full px-5 py-4 rounded-xl font-medium text-lg flex justify-between items-center transition active:scale-95 ${activeSection === section.id
+                                    ? "bg-neutral-800 border-neutral-600 border"
+                                    : "bg-neutral-900 border border-neutral-800 hover:bg-neutral-800"
+                                    }`}
                             >
-                                {editing.account ? "Cancelar" : "Editar"}
+                                <div className="flex items-center gap-3">
+                                    <span className={`w-2 h-2 rounded-full ${section.color}`}></span>
+                                    {section.label}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {sectionsWithChanges.includes(section.id) && (
+                                        <FontAwesomeIcon icon={faCircleDot} className="text-orange-500 text-sm" />
+                                    )}
+                                    <span className={section.textHover}>
+                                        <FontAwesomeIcon icon={faArrowRightLong} />
+                                    </span>
+                                </div>
                             </button>
-                        </div>
-
-                        {[
-                            { label: "Nombre", name: "name" },
-                            { label: "Apellido", name: "lastname" },
-                            { label: "Teléfono", name: "phoneNumber" }
-                        ].map(({ label, name }) => (
-                            <div key={name}>
-                                <label className="text-sm text-gray-500">{label}</label>
-                                {editing.account ? (
-                                    <input
-                                        name={name}
-                                        value={form[name] ?? ""}
-                                        onChange={handleChange}
-                                        className="w-full mt-1 bg-neutral-900 border border-neutral-700 rounded-md px-3 py-2"
-                                    />
-                                ) : (
-                                    <p>{form[name] || "—"}</p>
-                                )}
-                            </div>
                         ))}
-
-                        <div>
-                            <label className="text-sm text-gray-500">Email</label>
-                            <p>{account.email}</p>
-                        </div>
-                    </section>
-                )}
-
-                {/* Dirección */}
-                {activeSection === "address" && (
-                    <section className="border-b border-neutral-800 pb-8 flex flex-col gap-5">
-                        <div className="flex justify-between">
-                            <h2 className="text-lg font-semibold">Dirección</h2>
-                            <button
-                                onClick={() => setEditing(e => ({ ...e, address: !e.address }))}
-                                className="text-sm text-gray-400"
-                            >
-                                {editing.address ? "Cancelar" : "Editar"}
-                            </button>
-                        </div>
-
-                        {[
-                            { label: "Calle", name: "street" },
-                            { label: "Número exterior", name: "exteriorNumber" },
-                            { label: "Colonia", name: "neighborhood" },
-                            { label: "Ciudad", name: "city" },
-                            { label: "Estado", name: "state" },
-                            { label: "Código postal", name: "postalCode" }
-                        ].map(({ label, name }) => (
-                            <div key={name}>
-                                <label className="text-sm text-gray-500">{label}</label>
-                                {editing.address ? (
-                                    <input
-                                        name={name}
-                                        value={form[name] ?? ""}
-                                        onChange={handleChange}
-                                        className="w-full mt-1 bg-neutral-900 border border-neutral-700 rounded-md px-3 py-2"
-                                    />
-                                ) : (
-                                    <p>{form[name] || "—"}</p>
-                                )}
-                            </div>
-                        ))}
-                    </section>
-                )}
-
-                {/* Danger */}
-                {activeSection === "danger" && (
-                    <section className="border border-red-900 bg-red-950/30 rounded-xl p-5">
-                        <h2 className="text-red-400 font-semibold mb-2">Zona peligrosa</h2>
 
                         <button
-                            onClick={handleDelete}
-                            className="px-4 py-2 bg-red-700 rounded-md"
+                            onClick={() => handleSectionChange("danger")}
+                            className={`w-full mt-4 px-5 py-4 rounded-xl font-medium text-lg flex justify-between items-center transition active:scale-95 ${activeSection === "danger"
+                                ? "bg-red-500/20 border border-red-500/40 text-red-300 shadow-sm"
+                                : "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
+                                }`}
                         >
-                            Eliminar cuenta
+                            <div className="flex items-center gap-3">
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                Eliminar cuenta
+                            </div>
+                            <span className="text-red-500">
+                                <FontAwesomeIcon icon={faArrowRightLong} />
+                            </span>
                         </button>
-                    </section>
-                )}
-
-            </main>
+                    </nav>
+                </div>
+            </Menu>
         </div>
     )
 }

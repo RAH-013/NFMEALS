@@ -1,4 +1,4 @@
-import { authService, getUserDataService, getUserAvatarService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService } from "../service/user.js";
+import { authService, getUserDataService, getUserAvatarService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService, updateUserService, getUsersService } from "../service/user.js";
 import { successResponse, validateRequired, validateFieldRequired, cookieResponse } from "../utils/response.js";
 import { controller } from "../utils/controller.js";
 
@@ -38,6 +38,20 @@ export const verifyEmailToken = controller(async (req, res) => {
     return successResponse(res, response);
 });
 
+export const getUsers = controller(async (req, res) => {
+    const usersData = await getUsersService(req.query);
+
+    return successResponse(res, usersData)
+})
+
+export const getUserDataById = controller(async (req, res) => {
+    const { id } = req.params;
+
+    const userData = await getUserProfileService(id);
+
+    return successResponse(res, userData);
+})
+
 export const getUserData = controller(async (req, res) => {
     const { id } = req.user;
 
@@ -53,13 +67,11 @@ export const getUserAvatar = controller(async (req, res) => {
 });
 
 export const getUserProfile = controller(async (req, res) => {
-    validateFieldRequired(req.params, "userId");
+    const { id } = req.user;
 
-    const { userId } = req.params;
+    const userProfile = await getUserProfileService(id);
 
-    const userProfile = await getUserProfileService(userId);
-
-    successResponse(res, { email, name, lastname, isEmailVerified, role, address, phoneNumber })
+    successResponse(res, userProfile)
 });
 
 export const createUser = controller(async (req, res) => {
@@ -76,22 +88,21 @@ export const createUser = controller(async (req, res) => {
     return successResponse(res, user, 201);
 });
 
+export const updateUser = controller(async (req, res) => {
+    const newData = req.body || {};
+    const { id } = req.user;
+
+    const user = await updateUserService(id, newData);
+
+    return successResponse(res, user, 200)
+})
+
 export const deleteUser = controller(async (req, res) => {
-    validateFieldRequired(req.params, "userId");
+    const { id } = req.user;
 
-    const { userId } = req.params;
-    const { id, role } = req.user;
+    await deleteUserService(id);
 
-    if (role !== "admin" && userId !== id) {
-        const err = new Error("Prohibido");
-        err.code = "FORBIDDEN";
-        err.status = 403;
-        throw err;
-    }
-
-    await deleteUserService(userId);
-
-    return successResponse(res, { message: "Usuario eliminado correctamente" });
+    return cookieResponse(res, null, false);
 });
 
 export const createRootUser = async () => {

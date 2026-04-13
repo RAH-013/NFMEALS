@@ -39,11 +39,11 @@ function Auth() {
         <div className="flex min-h-screen bg-neutral-950 text-white">
 
             <Link
-                className="absolute top-4 left-4 flex items-center gap-2 px-2 py-1 text-red-700 cursor-pointer rounded hover:bg-neutral-700 z-10"
+                className="text-4xl font-bold md:font-normal md:text-base absolute top-4 left-4 flex items-center gap-2 px-2 py-1 text-red-700 cursor-pointer rounded hover:bg-neutral-700 z-10"
                 to="/"
             >
                 <FontAwesomeIcon icon={faArrowLeft} />
-                Regresar
+                <span className="hidden md:block">Regresar</span>
             </Link>
 
             <div className="hidden md:flex flex-1 items-center justify-center bg-neutral-900">
@@ -73,7 +73,7 @@ function Auth() {
 
                     <div className="flex flex-col items-center gap-3 md:hidden">
                         <Images src="/NF.svg" alt="Logotipo" className="bg-black" width="90px" height="90px" />
-                        <h1 className="text-xl font-semibold text-center">
+                        <h1 className="hidden md:flex text-xl font-semibold text-center">
                             {isLogin ? "Hola de nuevo" : "Únete ahora"}
                         </h1>
                     </div>
@@ -108,7 +108,7 @@ function Auth() {
 
                             <a href="/api/users/auth" className="flex items-center justify-center gap-3 bg-white text-black rounded-lg py-3 font-medium hover:bg-neutral-200 transition cursor-pointer">
                                 <Images
-                                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                                    src="/Google.svg"
                                     alt="Google"
                                     width="20px"
                                     height="20px"

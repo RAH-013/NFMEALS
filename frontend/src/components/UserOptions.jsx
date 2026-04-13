@@ -41,18 +41,20 @@ function UserOptions() {
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [menuOpen])
 
-    if (loading) return <span>Cargando</span>
+    if (loading) return <span className="text-red-800">Cargando</span>
 
     return (
         <div className="flex items-center gap-4 relative" ref={menuRef}>
             {user ? (
                 <>
-                    <Link
-                        to="/carrito"
-                        className="flex items-center gap-1 hover:text-red-400 transition"
-                    >
-                        <FontAwesomeIcon icon={faCartShopping} className="text-xl" />
-                    </Link>
+                    {user.role === "customer" && (
+                        <Link
+                            to="/carrito"
+                            className="flex items-center gap-1 hover:text-red-400 transition"
+                        >
+                            <FontAwesomeIcon icon={faCartShopping} className="text-xl" />
+                        </Link>
+                    )}
 
                     <button
                         type="button"

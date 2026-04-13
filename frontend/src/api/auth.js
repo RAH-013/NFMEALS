@@ -41,6 +41,16 @@ export const apiMe = async () => {
     }
 };
 
+export const apiMeProfile = async () => {
+    try {
+        const response = await apiAxios.get("/users/me/profile");
+        return response.data;
+    } catch (error) {
+        console.error("Error en obtener información personal:", error);
+        return error.response.data
+    }
+};
+
 export const apiLogout = async () => {
     try {
         const response = await apiAxios.post("/users/logout");
@@ -57,24 +67,6 @@ export const apiCreate = async ({ email, password, captcha }) => {
         return response.data;
     } catch (error) {
         console.error("Error al crear usuario:", error);
-    }
-}
-
-export const apiUpdate = async (id, { name, password }) => {
-    try {
-        const response = await apiAxios.put(`/users/${id}`, { email, password });
-        return response.data;
-    } catch (error) {
-        console.error("Error en actualizar usuario:", error);
-    }
-};
-
-export const apiDelete = async (id) => {
-    try {
-        const response = await apiAxios.delete(`/users/${id}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error al eliminar usuario:", error);
     }
 }
 

@@ -11,7 +11,16 @@ export function UserProvider({ children }) {
     const navigate = useNavigate();
 
     const refreshUser = useCallback(async () => {
+        const flag = sessionStorage.getItem("nf_meals");
+
+        if (!flag) {
+            setUser(null);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
+
         try {
             const { success, data, error } = await apiMe();
 
@@ -34,6 +43,7 @@ export function UserProvider({ children }) {
     }, [refreshUser]);
 
     const login = async () => {
+        sessionStorage.setItem("nf_meals", true);
         await refreshUser();
     };
 
@@ -43,6 +53,7 @@ export function UserProvider({ children }) {
         } catch (err) {
             console.error("Error al cerrar sesión:", err);
         } finally {
+            sessionStorage.removeItem("nf_meals")
             setUser(null);
             navigate("/");
         }
