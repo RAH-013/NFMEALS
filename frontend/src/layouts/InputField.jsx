@@ -84,6 +84,7 @@ function InputField({
                 autoComplete={autoComplete ? name : "new-password"}
                 className={`peer w-full px-3 pt-6 pb-2 pr-10 bg-transparent border rounded-lg
                 text-white placeholder-transparent
+                selection:bg-red-500/70 selection:text-white
                 focus:outline-none transition disabled:opacity-50
                 ${alert ? "border-yellow-400" : "border-neutral-600"}
                 ${alertStyles}

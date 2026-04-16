@@ -30,7 +30,7 @@ export const cookieResponse = (res, token = null, redirect = false, status = 200
     const cookieOptions = {
         httpOnly: true,
         secure: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
         ...(token && { maxAge: 3600000 })
     };
 
@@ -43,7 +43,7 @@ export const cookieResponse = (res, token = null, redirect = false, status = 200
     }
 
     if (redirect) {
-        return res.redirect("/");
+        return res.redirect("/authenticate?google=true");
     }
 
     return res.json({

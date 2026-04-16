@@ -30,6 +30,10 @@ html {
     border: 1px solid #e5e7eb !important;
 }
 
+.swal2-input {
+    color: #fff !important;
+}
+
 .swal2-confirm {
     background-color: #c51821 !important;
     color: #fff !important;
@@ -70,4 +74,52 @@ html {
 
 .swiper-pagination-bullet-active {
     background: #e31d26;
+}
+
+/* Animaciones */
+@keyframes reveal {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+        filter: blur(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+.animate-reveal {
+    animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes dynamic-in {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+        filter: blur(8px);
+    }
+
+    10%,
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+        filter: blur(4px);
+    }
+}
+
+.animate-dynamic {
+    animation: dynamic-in 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.text-glow-white {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }

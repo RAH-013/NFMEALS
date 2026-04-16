@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRightLong, faXmark, faCircleDot } from "@fortawesome/free-solid-svg-icons"
 
 import { UserContext } from "../context/User"
-import { apiMeProfile } from "../api/auth"
+import { apiMeProfile } from "../api/users"
 
 import Menu from "../layouts/Menu"
 import ProfileSections from "../components/ProfileSections"

@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import { ALTCHA_SECRET, FRONT_PORT, FRONT_URI } from "../config/env.js";
+import { ALTCHA_SECRET } from "../config/env.js";
 import { createChallenge } from "altcha-lib";
 
-import { authUser, googleAuth, logoutUser, verifyEmail, verifyEmailToken, getUserData, getUserAvatar, createUser, updateUser, deleteUser, getUserProfile, getUsers, getUserDataById } from "../controller/user.js";
+import { authUser, googleAuth, logoutUser, verifyEmail, verifyEmailToken, getUserData, getUserAvatar, createUser, updateUser, deleteUser, getUserProfile, getUsers, getUserDataById, deleteUserById, changeUserRole } from "../controller/user.js";
 import { authenticate, authorizeAdmin } from "../middleware/auth.js";
 
 import { challengeLimiter, loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
@@ -45,10 +45,6 @@ router.get("/challenge", challengeLimiter, async (req, res) => {
     res.json(challenge);
 });
 
-router.get("/all", authenticate, authorizeAdmin, getUsers);
-
-router.get("/profile/:id", authenticate, authorizeAdmin, getUserDataById);
-
 router.get("/me", authenticate, getUserData);
 
 router.get("/me/profile", authenticate, getUserProfile);
@@ -58,5 +54,13 @@ router.get("/me/avatar", authenticate, getUserAvatar);
 router.put("/", authenticate, updateUser);
 
 router.delete("/", authenticate, deleteUser);
+
+router.get("/all", authenticate, authorizeAdmin, getUsers);
+
+router.get("/profile/:id", authenticate, authorizeAdmin, getUserDataById);
+
+router.put("/profile/:id/:role", authenticate, authorizeAdmin, changeUserRole);
+
+router.delete("/:id", authenticate, authorizeAdmin, deleteUserById);
 
 export default router;

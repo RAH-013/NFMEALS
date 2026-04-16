@@ -31,25 +31,6 @@ export const apiVerifyEmailToken = async (token) => {
     }
 };
 
-export const apiMe = async () => {
-    try {
-        const response = await apiAxios.get("/users/me");
-        return response.data;
-    } catch (error) {
-        console.error("Error en obtener información personal:", error);
-        return error.response.data
-    }
-};
-
-export const apiMeProfile = async () => {
-    try {
-        const response = await apiAxios.get("/users/me/profile");
-        return response.data;
-    } catch (error) {
-        console.error("Error en obtener información personal:", error);
-        return error.response.data
-    }
-};
 
 export const apiLogout = async () => {
     try {

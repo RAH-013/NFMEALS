@@ -23,9 +23,9 @@ function Auth() {
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
-        const token = params.get("token");
-        if (token) {
-            login(token);
+        const authGoogle = params.get("google");
+        if (authGoogle) {
+            login();
             SwalCustom({
                 icon: "success",
                 message: "Autenticación exitosa",

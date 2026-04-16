@@ -1,4 +1,4 @@
-import { authService, getUserDataService, getUserAvatarService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService, updateUserService, getUsersService } from "../service/user.js";
+import { authService, getUserDataService, getUserAvatarService, registerService, deleteUserService, createRootUserService, getUserProfileService, verifyEmailService, verifyEmailTokenService, updateUserService, getUsersService, changeUserRoleService } from "../service/user.js";
 import { successResponse, validateRequired, validateFieldRequired, cookieResponse } from "../utils/response.js";
 import { controller } from "../utils/controller.js";
 
@@ -39,7 +39,9 @@ export const verifyEmailToken = controller(async (req, res) => {
 });
 
 export const getUsers = controller(async (req, res) => {
-    const usersData = await getUsersService(req.query);
+    const { id } = req.user;
+
+    const usersData = await getUsersService(req.query, id);
 
     return successResponse(res, usersData)
 })
@@ -95,7 +97,15 @@ export const updateUser = controller(async (req, res) => {
     const user = await updateUserService(id, newData);
 
     return successResponse(res, user, 200)
-})
+});
+
+export const changeUserRole = controller(async (req, res) => {
+    const { id, role } = req.params;
+
+    const user = await changeUserRoleService(id, role);
+
+    successResponse(res, user);
+});
 
 export const deleteUser = controller(async (req, res) => {
     const { id } = req.user;
@@ -103,6 +113,14 @@ export const deleteUser = controller(async (req, res) => {
     await deleteUserService(id);
 
     return cookieResponse(res, null, false);
+});
+
+export const deleteUserById = controller(async (req, res) => {
+    const { id } = req.params;
+
+    await deleteUserService(id);
+
+    successResponse(res)
 });
 
 export const createRootUser = async () => {

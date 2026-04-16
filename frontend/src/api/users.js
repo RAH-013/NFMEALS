@@ -12,6 +12,26 @@ export const apiGetUsers = async (options) => {
     }
 }
 
+export const apiMe = async () => {
+    try {
+        const response = await apiAxios.get("/users/me");
+        return response.data;
+    } catch (error) {
+        console.error("Error en obtener información personal:", error);
+        return error.response.data
+    }
+};
+
+export const apiMeProfile = async () => {
+    try {
+        const response = await apiAxios.get("/users/me/profile");
+        return response.data;
+    } catch (error) {
+        console.error("Error en obtener información personal:", error);
+        return error.response.data
+    }
+};
+
 export const apiUpdate = async (formData) => {
     try {
         const response = await apiAxios.put('/users/', formData);
@@ -29,3 +49,33 @@ export const apiDelete = async () => {
         console.error("Error al eliminar usuario:", error);
     }
 }
+
+export const apiGetUserProfile = async (id) => {
+    try {
+        const response = await apiAxios.get(`/users/profile/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error en obtener información del usuario:", error);
+        throw error.response?.data || error;
+    }
+};
+
+export const apiChangeUserRole = async (id, role) => {
+    try {
+        const response = await apiAxios.put(`/users/profile/${id}/${role}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error al cambiar rol del usuario:", error);
+        throw error.response?.data || error;
+    }
+};
+
+export const apiUserDelete = async (id) => {
+    try {
+        const response = await apiAxios.delete(`/users/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error al eliminar usuario:", error);
+        throw error.response?.data || error;
+    }
+};

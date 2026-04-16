@@ -5,8 +5,24 @@ import { faQuoteLeft } from "@fortawesome/free-solid-svg-icons";
 import CustomSwiper from "../components/CustomSwiper"
 import Images from "../layouts/Images"
 
+const FRASES = [
+    { p1: "Recetas de", p2: "Chef Profesional" },
+    { p1: "Ingredientes", p2: "100% Premium" },
+    { p1: "Nutrición", p2: "Superior y Medida" },
+    { p1: "Directo", p2: "A tu Mesa" }
+];
+
 function Home() {
     const [activeText, setActiveText] = useState("");
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setIndex((prev) => (prev + 1) % FRASES.length);
+        }, 4000);
+
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         if (window.location.hash) {
@@ -19,62 +35,84 @@ function Home() {
             }, 100)
         }
     }, [])
+
     return (
         <div className="bg-gradient-to-bottom from-neutral-900 via-neutral-800 to-neutral-900 text-white">
-            <section id="home" className="max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden">
-                <div className="space-y-6">
-                    <h1 className="text-4xl md:text-6xl font-bold text-red-500 leading-tight">
-                        DESCUBRE TU PLAN IDEAL AHORA
-                    </h1>
+            <section id="home" className="relative w-full overflow-hidden">
+                <div className="absolute inset-0 bg-[url('/patterns/fake-brick.png')] bg-repeat opacity-30 pointer-events-none"></div>
+                <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col md:flex-row items-center gap-10">
 
-                    <p className="text-neutral-300 text-lg md:text-xl max-w-md">
-                        Transforma tu alimentacion sin esfuerzo
-                    </p>
+                    <div className="w-full md:w-3/5 space-y-8 py-10">
+                        <h1 className="text-4xl md:text-7xl font-extrabold text-red-500 leading-[1.1] flex flex-wrap gap-x-[0.2em] tracking-tighter">
+                            {"MAXIMO RENDIMIENTO EN CADA BOCADO".split(" ").map((palabra, i) => (
+                                <span
+                                    key={i}
+                                    className="inline-block opacity-0 animate-reveal"
+                                    style={{ animationDelay: `${i * 0.12}s` }}
+                                >
+                                    {palabra}
+                                </span>
+                            ))}
+                        </h1>
 
-                    <button className="cursor-pointer bg-red-500 hover:bg-red-600 transition px-6 py-3 rounded-lg font-semibold">
-                        ARMAR MI PLAN
-                    </button>
-                </div>
+                        <div className="h-24 md:h-32 flex flex-col justify-center opacity-0 animate-reveal" style={{ animationDelay: '1s' }}>
+                            <div key={index} className="animate-dynamic">
+                                <p className="text-red-500 text-xs md:text-sm uppercase tracking-[0.4em] font-bold mb-2">
+                                    {FRASES[index].p1}
+                                </p>
+                                <p className="text-white text-3xl md:text-5xl font-black italic tracking-tighter leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                    {FRASES[index].p2.toUpperCase()}
+                                </p>
+                            </div>
+                        </div>
 
-                <div className="w-full flex-column md:w-1/2 justify-center">
-                    <CustomSwiper
-                        slides={[
-                            { id: 1, url: "/main/Main_1.jpg" },
-                            { id: 2, url: "/main/Main_2.jpg" },
-                            { id: 3, url: "/main/Main_3.jpg" },
-                            { id: 4, url: "/main/Main_4.jpg" },
-                            { id: 5, url: "/main/Main_5.mp4", type: "video" },
-                        ]}
-                        showPagination
-                        slidesPerView={1}
-                        renderSlideContent={(slide) => {
-                            if (slide.type === "video") {
+                        <div className="opacity-0 animate-reveal" style={{ animationDelay: '1.5s' }}>
+                            <button className="group relative cursor-pointer overflow-hidden bg-red-700 hover:bg-red-600 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+                                <span className="relative z-10">ARMAR MI PLAN</span>
+                                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="w-full md:w-2/5 flex-column justify-center z-20">
+                        <CustomSwiper
+                            slides={[
+                                { id: 1, url: "/main/Main_1.jpg" },
+                                { id: 2, url: "/main/Main_2.jpg" },
+                                { id: 3, url: "/main/Main_3.jpg" },
+                                { id: 4, url: "/main/Main_4.jpg" },
+                                { id: 5, url: "/main/Main_5.mp4", type: "video" },
+                            ]}
+                            showPagination
+                            slidesPerView={1}
+                            renderSlideContent={(slide) => {
+                                if (slide.type === "video") {
+                                    return (
+                                        <video
+                                            src={slide.url}
+                                            autoPlay
+                                            muted
+                                            loop
+                                            className="w-full h-full object-cover"
+                                        />
+                                    );
+                                }
                                 return (
-                                    <video
+                                    <Images
                                         src={slide.url}
-                                        autoPlay
-                                        muted
-                                        loop
-                                        className="w-full h-full object-cover"
+                                        alt="slide"
+                                        width="100%"
+                                        height="100%"
+                                        isRound=""
                                     />
                                 );
-                            }
-
-                            return (
-                                <Images
-                                    src={slide.url}
-                                    alt="slide"
-                                    width="100%"
-                                    height="100%"
-                                    isRound=""
-                                />
-                            );
-                        }}
-                    />
+                            }}
+                        />
+                    </div>
                 </div>
             </section>
 
-            <section id="how-it-works" className="bg-linear-to-b from-slate-900 to-black text-white">
+            <section id="how-it-works" className="bg-black text-white">
                 <div className="py-24 px-6 md:px-20 max-w-7xl mx-auto">
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -86,7 +124,7 @@ function Home() {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
-                        <div className="group bg-white/5 border border-white/10 p-8 rounded-2xl hover:bg-white/10 transition duration-300">
+                        <div className="group bg-white/5 border border-white/10 p-8 rounded-2xl">
                             <div className="mb-6 flex justify-center">
                                 <Images className="aspect-square" objectFit="contain" src="/main/Operation_1.png" alt="Pide" />
                             </div>
@@ -100,7 +138,7 @@ function Home() {
                             </p>
                         </div>
 
-                        <div className="group bg-white/5 border border-white/10 p-8 rounded-2xl hover:bg-white/10 transition duration-300">
+                        <div className="group bg-white/5 border border-white/10 p-8 rounded-2xl">
                             <div className="mb-6 flex justify-center">
                                 <Images className="aspect-square" objectFit="contain" src="/main/Operation_2.png" alt="Personaliza" />
                             </div>
@@ -114,7 +152,7 @@ function Home() {
                             </p>
                         </div>
 
-                        <div className="group bg-white/5 border border-white/10 p-8 rounded-2xl hover:bg-white/10 transition duration-300">
+                        <div className="group bg-white/5 border border-white/10 p-8 rounded-2xl">
                             <div className="mb-6 flex justify-center">
                                 <Images className="aspect-square" objectFit="contain" src="/main/Operation_3.png" alt="Entrega" />
                             </div>
@@ -136,7 +174,7 @@ function Home() {
                             Cómo prepararlo
                         </h2>
                         <p className="text-gray-400 text-lg md:text-xl">
-                            3 formas, mismo resultado: Comida brutal 🔥
+                            3 formas, mismo resultado: Comida brutal.
                         </p>
                     </div>
 
@@ -248,7 +286,7 @@ function Home() {
             </section>
 
             <section id="certificate" className="relative bg-black text-white min-h-screen px-6 md:px-20 py-20 flex items-center overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/cartographer.png')] bg-repeat opacity-30"></div>
+                <div className="absolute inset-0 bg-[url('/patterns/cartographer.png')] bg-repeat opacity-40"></div>
 
                 <div className="relative max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-10 items-center">
                     <div className="space-y-6">

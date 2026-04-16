@@ -243,35 +243,70 @@ export const getUserProfileService = async (userId) => {
     return profile;
 };
 
-export const getUsersService = async (options = {}) => {
+export const getUsersService = async (options = {}, myId) => {
+    if (!myId) {
+        const err = new Error("Usuario no disponible");
+        err.code = "INVALID_USER";
+        err.status = 401;
+        throw err;
+    }
+
     const page = parseInt(options.page, 10) || 1;
     const limit = parseInt(options.limit, 10) || 10;
     const search = options.search || "";
 
-    const { page: _p, limit: _l, search: _s, ...filters } = options;
-
     const offset = (page - 1) * limit;
 
-    const whereClause = {};
+    const normalizedSearch = search.trim().toLowerCase();
 
-    if (search) {
-        whereClause[Op.or] = [
-            { name: { [Op.like]: `%${search}%` } },
-            { email: { [Op.like]: `%${search}%` } }
-        ];
+    const searchFields = [
+        "id",
+        "email",
+        "$profile.name$",
+        "$profile.lastname$",
+        "$profile.phoneNumber$",
+        "role"
+    ];
+
+    let verificationFilter = null;
+
+    if (normalizedSearch === "verificado") {
+        verificationFilter = true;
     }
 
-    for (const [key, value] of Object.entries(filters)) {
-        if (value !== undefined && value !== null && value !== "") {
-            whereClause[key] = value;
-        }
+    if (normalizedSearch === "no verificado") {
+        verificationFilter = false;
     }
+
+    const whereClause = {
+        id: { [Op.ne]: myId },
+
+        ...(search && {
+            [Op.or]: [
+                ...searchFields.map(field => ({
+                    [field]: { [Op.like]: `%${search}%` }
+                })),
+
+                ...(verificationFilter !== null
+                    ? [{ isEmailVerified: verificationFilter }]
+                    : []
+                )
+            ]
+        })
+    };
 
     const { count, rows } = await User.findAndCountAll({
-        attributes: ["id", "email", "isEmailVerified", "role", "createdAt"],
+        attributes: [
+            "id",
+            "email",
+            "isEmailVerified",
+            "role",
+            "createdAt"
+        ],
         where: whereClause,
         limit,
         offset,
+        subQuery: false,
         include: [
             {
                 model: UserProfile,
@@ -279,7 +314,7 @@ export const getUsersService = async (options = {}) => {
                 attributes: ["name", "lastname", "phoneNumber"]
             }
         ],
-        order: [['createdAt', 'DESC']]
+        order: [["createdAt", "DESC"]]
     });
 
     if (rows.length === 0 && page > 1) {
@@ -294,7 +329,9 @@ export const getUsersService = async (options = {}) => {
             totalItems: count,
             totalPages: Math.ceil(count / limit),
             currentPage: page,
-            itemsPerPage: limit
+            itemsPerPage: limit,
+            hasNextPage: page < Math.ceil(count / limit),
+            hasPrevPage: page > 1
         },
         users: rows
     };
@@ -354,6 +391,34 @@ export const updateUserService = async (userId, newData) => {
 
     return {
         id: user.id,
+    };
+};
+
+export const changeUserRoleService = async (userId, newRole) => {
+    const allowedRoles = ["customer", "admin"];
+
+    if (!allowedRoles.includes(newRole)) {
+        const err = new Error("Rol no válido");
+        err.code = "INVALID_ROLE";
+        err.status = 400;
+        throw err;
+    }
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        const err = new Error("Usuario no encontrado");
+        err.code = "USER_NOT_FOUND";
+        err.status = 404;
+        throw err;
+    }
+
+    user.role = newRole;
+    await user.save();
+
+    return {
+        id: user.id,
+        role: user.role
     };
 };
 

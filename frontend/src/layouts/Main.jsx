@@ -9,7 +9,7 @@ export default function Main() {
     return (
         <>
             <Header />
-            <main>
+            <main className="h-full flex flex-col">
                 <Suspense fallback={<Loader />}>
                     <Outlet />
                 </Suspense>
